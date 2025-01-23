@@ -1,0 +1,1513 @@
+---
+title: "<center>Reproducible Area Deprivation Index (ReADI | 2022)</center>"
+author: "<br><center>[Nicole Gladish, PhD](https://profiles.stanford.edu/nicole-gladish)</center>"
+date: "<center>`r format(Sys.time(), '%d %B, %Y')`</center>"
+output:
+  html_document:
+    includes:
+      after_body: "/Users/ngladish/Documents/General/HTML_Files/NG_footer.html"
+      in_header: "/Users/ngladish/Documents/General/HTML_Files/header.html"
+    toc: true
+    toc_depth: 2
+    number_sections: true
+    toc_float: 
+      collapsed: true
+      smooth_scroll: true
+    css: "/Users/ngladish/Documents/General/HTML_Files/bootstrap.css"
+    self_contained: true
+---
+<br><br>
+
+```{css, echo = FALSE}
+  /* General code block styling */
+  pre {
+    background-color: #2e2e2e;
+    color: #f5f5f5;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: "Courier New", monospace;
+  }
+  code {
+      background-color: #2e2e2e;
+    color: #f5f5f5;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: "Courier New", monospace;
+}
+  .hljs{
+  display: block;
+  padding: 0.5em;
+  background: #2e2e2e;
+  color: #f5f5f5;
+  }
+
+  /* Strings */
+  .hljs-string {
+      color: #c2a3fd; 
+  }
+
+  /* Numbers */
+  .hljs-number, 
+  .hljs-literal,
+  .hljs-logical,
+  .hljs-built_in, 
+  .hljs-variable.constant,
+  .hljs-keyword, 
+  .hljs-variable.language, 
+  .hljs-title.function{
+      color: #8fff84; 
+  }
+
+  /* Comments */
+  .hljs-comment, .hljs-quote {
+      color: #ff7777; 
+  }
+
+  /* Symbols and punctuation (e.g., parentheses, brackets) */
+.hljs-punctuation, .hljs-operator {
+      color: #13cee0; 
+  }
+  
+  /* General card block styling */
+  
+div.card {
+    background-color: #71797E; /* Dark background color */
+    border-radius: 10px;
+    padding: 10px;
+    color: white; /* Set text color to white */
+    margin-bottom: 0;
+    margin-top: 10px; /* Add some space above paragraphs if needed */
+  }
+   /* Explicitly set all header text inside .card to white (in case bootstrap overrides it) */
+  div.card h1, div.card h2, div.card h3, div.card h4, div.card h5, div.card h6 {
+    color: white; /* Set header text color to white */
+  }
+```
+
+# Introduction
+***
+
+<br>
+
+## Overview {.tabset}
+***
+
+[Singh (2003)](https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.93.7.1137) created the area deprivation index (ADI) which is a factor-based deprivation index comprised of 17 measures including poverty, education, housing and employment indicators drawn from US Census data to create a measure of socioeconomic context for a particular census-based region. 
+
+[Kind et al. (2014)](https://www.acpjournals.org/doi/10.7326/M13-2946) then updated the ADI using 2000 census data. This group made the ADI accessible on the ["Neighborhood Atlas" website](https://www.neighborhoodatlas.medicine.wisc.edu/) produced by [Kind et al. (2018)](https://www.nejm.org/doi/full/10.1056/NEJMp1802313). The ADI was made at the census block group level for the 2015, 2020, and 2022 5-year ACS census data and can be downloaded at a nationally ranked level from 0-100 or state ranked level from 0-10. To get the other geographical levels a weighted average based on population size of the CBGs will used to produce the census tract score they are located in. The same will be done with the census tracts for the counties.
+
+> Analysis Notes
+
+- Singh justified the use of county level measures with the following quote: "Although census tracts are socioeconomically homogeneous geographic units with an average population of 4000, they are subject to change in every decennial census.  Counties, on the other hand, not only are more stable sociopolitical and geographic entities, but also provide an appropriate socioeconomic, political, and community context within which many social and public health policies are formulated and implemented."
+
+- Issues with Kind version: 
+  - Used 1990 weights on 2000 data
+  - Used weights calculated from census tract data on census block groups
+  - Did not update any thresholds such as income and education
+  - Shrinkage method applied later on in the versions is not explained clearly
+
+### Singh Methods
+
+<br>
+<h4>SINGH (2003)</h4>
+
+<strong><strong>1.</strong></strong> Singh took 21 socioeconomic indicators and performed factor analysis on them using 1990 census data. This resulted in two factors represented in 43% and 17% of the variance with 17 measures clustering with large loading (>0.45) on the first factor and so these 17 were selected and then re-run on factor analysis with a one factor solution producing the factor loading scores listed in the table below. These weights accounted for 52% of the variance in the data. 
+
+<strong><strong>2.</strong></strong> The factor score coefficients were used to weight the 17 indicators comprising the index.
+
+<strong><strong>3.</strong></strong> The factor scale was transformed into a standardized index by arbitrarily setting the index mean and standard deviation at 100 and 20, respectively. 
+
+<strong><strong>4.</strong></strong> The tract index scores were averaged to allow computation of index scores for each of the 3097 US counties.
+
+<strong><strong>5.</strong></strong> Higher index scores denote higher levels of deprivation.
+
+<br>
+
+### Kind Methods
+
+<br>
+<h4>Version 1 (5/1/2018)</h4>
+
+<strong><strong>1.</strong></strong> [Kind et al. (2014)](https://www.acpjournals.org/doi/10.7326/M13-2946) used [Singh (2003)](https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.93.7.1137) methods, using the 17 indicators from 2000 census data and tract level factor score coefficients from [Singh (2003)](https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.93.7.1137). 
+
+<strong><strong>2.</strong></strong> The 17 US Census variables were multiplied by their factor weights and then summed for each geographic unit. 
+
+<strong><strong>3.</strong></strong> The result is then transformed into a standardized index (the ADI) by arbitrarily setting the index mean at 100 and standard deviation at 20. 
+
+<strong><strong>4.</strong></strong> Using this approach, neighborhoods with higher ADI scores have higher levels of deprivation. All coefficients are multiplied by -1 to ease interpretation (greater ADI means a greater disadvantage).
+
+<br>
+<h4>Version 2 (5/1/2019)</h4>
+
+Every step in the methodology is the same as v1 except:
+
+<strong><strong>1.</strong></strong> Same as v1 except there was the suppression of CBGs was based on those with <100 people, fewer than 30 housing units, or >33% of the population living in group quarters based on [Diez et al. (2001)](https://www.sciencedirect.com/science/article/pii/S1047279701002216).
+
+<br>
+<h4>Version 3.0 (11/19/2020)</h4>
+
+Every step in the methodology is the same as v2 except:
+
+<strong><strong>1.</strong></strong> Two methodological changes have been implemented to address missing Census Block Group level data in the underlying ACS data, survey errors and a new geographically-nested imputation method:
+    <strong><strong>a)</strong></strong> Additional suppression of a small number of CBGs with survey errors acknowledged by the US Census Bureau.
+    <strong><strong>b)</strong></strong> Imputation of missing ACS items using a geographically-nested imputation methodology consistent with other area deprivation indices methodologies, including the English Indices of Multiple Deprivation (IMD) and the Scottish Indices of Multiple Deprivation (SIMD).
+
+<br>
+<h4>Version 3.1 (7/14/2021)</h4>
+
+Every step in the methodology is the same as v3.0 except:
+
+<strong><strong>1.</strong></strong> Suppression criteria was updated to use Population, Housing and Group Quarters estimates from the ACS in place of the decennial Census. This adjusts the ADI of approximately 70 block groups nationally.
+
+<br>
+<h4>Version 3.2 (9/16/2022)</h4>
+
+Every step in the methodology is the same as v3.1 except:
+
+<strong><strong>1.</strong></strong> The No Phone variable was removed from the ADI and replaced with a No Household Internet variable to reflect the change in household phone and internet service.
+
+<br>
+<h4>Version 4.0.0 (7/10/2023)</h4>
+
+Every step in the methodology is the same as v3.2 except:
+
+<strong><strong>1.</strong></strong> The v4 ADI has minor standard shrinkage statistical updates included to mitigate the effect of year-to-year sampling variations in block group level component estimates within American Community Survey (ACS) data. This results in very little actual change in ADI ranking but buffers from known and future expected variation in ACS source data.
+
+<br>
+<h4>Version 4.0.1 (9/9/2023)</h4>
+
+Every step in the methodology is the same as v4.0.0 except:
+
+<strong><strong>1.</strong></strong> The v4.0.1 ADI has minor refined shrinkage statistical updates to improve the precision of the block group level component estimates derived from the American Community Survey (ACS) data. This results in slight shifts to the block group rankings from the previous version while retaining the general pattern and improving the overall temporal stability of the ADI. Using Census Block Groups, Nine Digit ZIP Code Centroids geography.
+
+<br>
+
+## {-}
+
+> Factor Analysis Results 1990 Census Data (Singh 2003)
+
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Census Variable                                              |Tract Score Coefficient |Tract Loading |County Loading |
++=============================================================+========================+==============+===============+
+|Population aged ≥25 y with < 9 y of education, %             |0.0849                  |0.7498        |0.7885         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Population aged ≥25 y with at least a high school diploma, % |–0.0970                 |-0.8562       |-0.8231        |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Employed persons aged ≥16 y in white-collar occupations, %   |–0.0874                 |-0.7721       |-0.6890        |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Median family income, $                                      |–0.0977                 |-0.8629       |-0.9218        |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Income disparity$^a$                                         |0.0936                  |0.8262        |0.8827         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Median home value, $                                         |–0.0688                 |-0.6074       |-0.6740        |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Median gross rent, $                                         |–0.0781                 |-0.6896       |-0.7876        |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Median monthly mortgage, $                                   |–0.0770                 |-0.6795       |-0.7812        |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Owner-occupied housing units, %                              |–0.0615                 |-0.5431       |-0.4408        |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Civilian labor force population aged ≥16 y unemployed, %     |0.0806                  |0.7117        |0.5679         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Families below poverty level, %                              |0.0977                  |0.8623        |0.8796         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Population below 150% of the poverty threshold, %            |0.1037                  |0.9157        |0.9266         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Single-parent households with children aged < 18 y, %        |0.0719                  |0.6346        |0.3329         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Households without a motor vehicle, %                        |0.0694                  |0.6126        |0.4549         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Households without a telephone, %                            |0.0877                  |0.7748        |0.7830         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Occupied housing units without complete plumbing, % (log)    |0.0510                  |0.4505        |0.6392         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+|Households with more than 1 person per room, % (crowding)    |0.0556                  |0.4910        |0.4018         |
++-------------------------------------------------------------+------------------------+--------------+---------------+
+
+*<sup>$^a$ Income disparity in 1990 was defined as the log of 100×ratio of number of households with <\$10,000 income to number of households with ≥\$50,000 income.</sup>*
+
+<br>
+
+## NA-ADI Issues {.tabset}
+***
+
+Several issues were discovered with the ADI created by [2014 Kind et al.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf) and posted on the [Neighbourhood Atlas](https://www.neighborhoodatlas.medicine.wisc.edu/) website that we aim to improve upon with the ReADI:
+
+<br>
+
+### Standardization
+
+<h4>Problem</h4>
+
+Our group, in parallel with other groups, discovered that the NA-ADI was not correctly calculated. Singh determined the coefficients/weights/loadings that Kind et al. use in their measures by performing factor analysis on the set of 17 variables in order to construct the ADI measure. Factor analysis requires all input data be on the same scale which is done automatically in most functions across programming software which seems to be the case here based on [2014 Kind et al.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf) stating that they used the [2003 Singh](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf) methods which cites the SAS/STAT v8.1 FACTOR procedure which itself utilizes PROC FACTOR. The earliest version of a SAS/STAT user guide we could find was [version 9.1](https://support.sas.com/documentation/onlinedoc/91pdf/sasdoc_91/stat_ug_7313.pdf) and based on this documentation it is still unclear whether z-standardization occurs automatically within the function. The newer [documentation (v14.2)](https://documentation.sas.com/doc/en/statcdc/14.2/statug/statug_factor_syntax01.htm) does state online that the default is set to have your data standardized unless you specify otherwise but as code was not published with any manuscripts from either Singh nor Kind there is no way to determine definitively. There are some online [forums](https://communities.sas.com/t5/Statistical-Procedures/Question-related-to-standardization-in-PROC-FACTOR-Method/td-p/488717) (see page 6 of [this instruction manual](https://www.sas.com/storefront/aux/en/spsxsfactor/61314_excerpt.pdf)) which also suggest this default to be the case. Therefore, upon applying these coefficients/weights/loadings to new data one must first ensure all of the data is on the same scale. That this wasn't properly done by Kind et al. was brought to light by groups such as [Hannan et al.; 2023](https://www.healthaffairs.org/doi/10.1377/hlthaff.2022.01406?url_ver=Z39.88-2003&rfr_id=ori%3Arid%3Acrossref.org&rfr_dat=cr_pub++0pubmed) who found the ADI signal seemed to be driven by the median home value composite measure based on their findings being contradictory within New York State. 
+
+<h4>Solution</h4>
+
+Here, we will simply standardize the data prior to applying the weights/loadings using the function scale in base R ensuring that the arguments center and scale are TRUE.
+
+<br>
+
+### Concurrent Coefficients
+
+<h4>Problem</h4>
+
+[2014 Kind et al.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf) cites in Table 1 that the coefficients/weights/loadings they used were identical to the 1990 coefficients/weights/loadings used by [Singh; 2003](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf). This means that all iterations of this ADI version uses decades old weights which are likely inaccurate. Interestingly, [Singh; 2003](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf) when validating the temporal stability of the original ADI remade it using 1970 census data and in doing so re-calculated weights using that decades concurrent data as is depicted in Table 1 so there is no justification to use such outdated weights moving forward.
+
+<h4>Solution</h4>
+
+We will recalculate the weights for each new iterative year concurrent with the ReADI we will produce. This will be done by applying the function fa from the psych package in R using a one factor solution and pulling the weights variable.
+
+<br>
+
+### Updating Variable Thresholds
+
+<h4>Problem</h4>
+
+[2014 Kind et al.](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf) lists in Appendix 1 the variables used for their Neighborhood Atlas ADI are identical to the 1990 variables used by [Singh; 2003](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf) listed in Table 1. This means that all variables and thresholds are the same as was relevant over 30 years ago which is inherently problematic. Specifically, using an education threshold of 9th grade and higher education of high school graduation is likely going to result in an underestimate of such individuals in 2024. Additionally, the thresholds used for income disparity is different from at least inflation alone. Finally, having a measure fo whether someone has a telephone or not is not technologically relevant in today's time. Interestingly, [Singh; 2003](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf) when validating the temporal stability of the original ADI remade it using 1970 census data and in doing so re-defined at least the income disparity thresholds indicating the original intent was to modernize and make relevant the variables/thresholds as time went on.
+
+<h4>Solution</h4>
+
+We will change the following variables to more modern and accurate versions: 
+
+- Percent of population aged >= 25 years with < 9 years of education to Percent of population aged >= 25 years with < a high school diploma
+- Percent of population aged >= 25 years with < a high school diploma to Percent of population aged >= 25 years with < a bachelors degree
+- $\text{Income Disparity} = log(100*{\text{Household Income <\$10,000} \over \text{Household Income ≥\$50,000}})$ to $\text{Income Disparity} = log(100*{\text{Household Income <\$20,000} \over \text{Household Income ≥\$100,000}})$
+
+<br>
+
+### Population Size Adjustment
+
+<h4>Problem</h4>
+
+Counties, census tracts, and census block groups have varying population sizes ranging from 1-4,000 for census tracts and block groups to 500-9,000,000 for counties. They also have very skewed distributions making comparisons between areas within geographies and between geographies difficult.
+
+<h4>Solution</h4>
+
+- Calculate the log of the population and ensure a normal distribution. 
+- Within the factor analysis function add the transformed population measure as a weight. 
+
+<br>
+
+# ReADI Preparation
+***
+
+> Libraries
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code294">Show Code</button>
+  <div id="code294" class="collapse">
+
+```{r, eval = F}
+setwd("~/Desktop/SDVI/ADI/Analysis/ReADI_2022")
+```
+
+```{r, results = F, message = F}
+library(tidyverse)
+library(censusapi)
+library(reshape2) 
+library(plyr) 
+library(SciViews) 
+library(readxl) 
+library(tidycensus) 
+library(psych)
+options(tigris_use_cache = TRUE)
+library(tigris)
+library(spdep)
+library(statar)
+```
+
+```{r}
+sessionInfo()
+```
+  </div>
+</div>
+  
+<br><br>
+
+## Retrieving 2018-2022 5-Year ACS
+***
+
+> Obtaining Census Key
+
+In order to obtain the census API data you are required to obtain a census key from [here](https://api.census.gov/data/key_signup.html).
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code339">Show Code</button>
+  <div id="code339" class="collapse">
+  
+```{r, eval = F}
+Sys.getenv("CENSUS_KEY") # to check that the API key is in the system
+states_removed <- c("60", "66", "69", "74", "78") # These are the state numbers which won't be included
+states <- setdiff(unique(fips_codes$state_code), states_removed)
+```
+  </div>
+</div>
+  
+<br><br>
+
+### Pulling Variables Required
+***
+
+There are some areas which have no population or are located in water etc. These should be removed so they are not influencing the imputation of other regions. More information [here](https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2020pl/TGRSHP2020PL_TechDoc_Ch4.pdf). We are pulling data from three geographies: county, census tract, and census block group. Definitions on what these are can be found in this [census documentation](https://www2.census.gov/geo/pdfs/reference/GARM/Ch10GARM.pdf).
+
+Here is the breakdown of how many of each area exist:
+
+<div class = "row">
+<div class = "col-md-4">
+|Area       |Amount   |
+|:----------|:--------|
+|CBG        |242,336  |
+|CT         |85,396   |
+|County     |3,222    |
+</div>
+
+<div class = "col-md-8">
+</div>
+</div>
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code357">Show Code</button>
+  <div id="code357" class="collapse">
+```{r, eval = F}
+ADI_Vars <- c(
+       "B01003_001",
+       "B19013_001",
+       "B19001_002", "B19001_003", "B19001_004", "B19001_014", "B19001_015", "B19001_016", "B19001_017", 
+       "B17017_002", "B17017_001", 
+       "C17002_005", "C17002_004", "C17002_003", "C17002_002", "C17002_001", 
+       "B15003_001", "B15003_002", "B15003_003", "B15003_004", "B15003_005", "B15003_006", "B15003_007", "B15003_008", "B15003_009", "B15003_010", "B15003_011", "B15003_012", "B15003_013", "B15003_014", "B15003_015", "B15003_016", "B15003_022", "B15003_023", "B15003_024", "B15003_025",
+       "C24010_003", "C24010_027", "C24010_039", "C24010_063", "C24010_001",
+       "B23025_005", "B23025_003",
+       "B25077_001", 
+       "B25064_001", 
+       "B25088_002", 
+       "B25003_001", "B25003_002",
+       "B11012_010", "B11012_015", "B11012_001", 
+       "B25044_003", "B25044_010", "B25044_001", 
+       "B28002_013", "B28002_001",
+       "B25049_007", "B25049_004", "B25049_001", 
+       "B25014_005", "B25014_006", "B25014_007", "B25014_011", "B25014_012", "B25014_013", "B25014_001")
+  
+# CBG level
+ACS_CBG <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
+   ACS_CBG <- get_acs(
+    year = 2022,
+    geography = "block group",
+    state = states[x],
+    key = Sys.getenv("CENSUS_KEY"),
+    variables = ADI_Vars)
+})))
+ACS_CBG <- dcast(ACS_CBG, GEOID + NAME ~ variable, value.var=c("estimate"))
+ReADI_2022_CBG_Raw <- ACS_CBG %>% separate(NAME, c("Block_Group", "Tract", "County", "State"), sep = ";") # 242336
+save(ReADI_2022_CBG_Raw, file = "ReADI_2022_CBG_Raw.RData")
+
+# census tract level
+ACS_CT <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
+   ACS_CT <- get_acs(
+    year = 2022,
+    geography = "tract",
+    state = states[x],
+    key = Sys.getenv("CENSUS_KEY"),
+    variables = ADI_Vars)
+})))
+
+ACS_CT <- dcast(ACS_CT, GEOID + NAME ~ variable, value.var=c("estimate"))
+ReADI_CBG_2022_CT_Raw <- ACS_CT %>% separate(NAME, c("Tract", "County", "State"), sep = ";") # 85396
+save(ReADI_CBG_2022_CT_Raw, file = "ReADI_CBG_2022_CT_Raw.RData")
+
+# county level
+ACS_C <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
+   ACS_C <- get_acs(
+    year = 2022,
+    geography = "county",
+    state = states[x],
+    key = Sys.getenv("CENSUS_KEY"),
+    variables = ADI_Vars)
+})))
+
+ACS_C <- dcast(ACS_C, GEOID + NAME ~ variable, value.var=c("estimate"))
+ReADI_CBG_2022_C_Raw <- ACS_C %>% separate(NAME, c("County", "State"), sep = ",") # 3222
+save(ReADI_CBG_2022_C_Raw, file = "ReADI_CBG_2022_C_Raw.RData")
+```
+  </div>
+</div>
+  
+<br><br>
+
+### Pulling Geography Measures
+***
+
+These values are required for both imputation and for visualizations involving mapping.
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code434">Show Code</button>
+  <div id="code434" class="collapse">
+```{r, eval = F}
+CBG_Geo <- do.call(rbind, lapply(1:length(states), function(x){
+   ADI_2020_CBG_Raw_NG <- get_acs(
+    year = 2022,
+    geography = "block group",
+    geometry = TRUE,
+    state = states[x],
+    key = Sys.getenv("CENSUS_KEY"),
+    variables = "B01003_001")
+}))
+CBG_Geo <- CBG_Geo[!CBG_Geo$estimate == 0,] # from 242336 to 240172
+ACS_CBG_2022_Geometry <- CBG_Geo[, c("GEOID", "geometry")]
+save(ACS_CBG_2022_Geometry, file = "ACS_CBG_2022_Geometry.RData")
+
+CT_Geo <- do.call(rbind, lapply(1:length(states), function(x){
+   ADI_2020_CBG_Raw_NG <- get_acs(
+    year = 2022,
+    geography = "tract",
+    geometry = TRUE,
+    state = states[x],
+    key = Sys.getenv("CENSUS_KEY"),
+    variables = "B01003_001")
+}))
+CT_Geo <- CT_Geo[!CT_Geo$estimate == 0,] # 85396 to 84539
+ACS_CT_2022_Geometry <- CT_Geo[, c("GEOID", "geometry")]
+save(ACS_CT_2022_Geometry, file = "ACS_CT_2022_Geometry.RData")
+
+C_Geo <- do.call(rbind, lapply(1:length(states), function(x){
+   ADI_2020_CBG_Raw_NG <- get_acs(
+    year = 2022,
+    geography = "county",
+    geometry = TRUE,
+    state = states[x],
+    key = Sys.getenv("CENSUS_KEY"),
+    variables = "B01003_001")
+}))
+C_Geo <- C_Geo[!C_Geo$estimate == 0,] #3222 as none had 0
+ACS_C_2022_Geometry <- C_Geo[, c("GEOID", "geometry")]
+save(ACS_C_2022_Geometry, file = "ACS_C_2022_Geometry.RData")
+```
+  </div>
+</div>
+  
+<br><br>
+
+
+## Group Quarters
+***
+
+There are areas whose populations constitute individuals who are in group quarters which consist of two main groups:
+- Institutionalized
+  - Adult correctional facilities
+  - Nursing facilities
+- Non-Institutionalizes
+  - College/University student housing
+  
+Areas whose populations consist totally of group-quartered individuals cannot have an index properly calculated since the relevancy of much of the measures are not applicable and many of the policies and interventions may not be impactful for these populations. The neighborhood ADI addresses these areas by referring to [Roux et al. (2001)](https://www.sciencedirect.com/science/article/pii/S1047279701002216) where they recommend removing areas that had 33% or more of their population living in group quarters (all types).
+
+Unfortunately, the measures of group quarters, specifically tables B26001, B26103, and B26203 have NAs for all three geographies and so we will have to discuss and source out options accordingly.
+
+<br><br>
+
+## Population Size
+***
+
+[Roux et al. (2001)](https://www.sciencedirect.com/science/article/pii/S1047279701002216) also recommended removing areas which had a population size < 100 or had less than 30 housing units. This is something to consider although this may remove areas which could benefit from an ADI score. That being said, those with reported populations of 0 should be removed and we will do so below. as there are census tracts with such areas which have to be removed. The amount of areas removed are detailed in the table below.
+
+<div class = "row">
+<div class = "col-md-4">
+|Area       |Pop = 0   |Remaining |
+|:----------|:---------|:---------|
+|CBG        |2,164     |240,172   |
+|CT         |857       |84,539    |
+|County     |0         |3,222     |
+</div>
+
+<div class = "col-md-8">
+</div>
+</div>
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code494">Show Code</button>
+  <div id="code494" class="collapse">
+```{r, eval = F}
+ReADI_CBG_2022_CBG_Raw <- ReADI_CBG_2022_CBG_Raw[!ReADI_CBG_2022_CBG_Raw$B01003_001 == 0,] 
+save(ReADI_CBG_2022_CBG_Raw, file = "ReADI_CBG_2022_CBG_Raw.RData")
+
+ReADI_CBG_2022_CT_Raw <- ReADI_CBG_2022_CT_Raw[!ReADI_CBG_2022_CT_Raw$B01003_001 == 0,] 
+save(ReADI_CBG_2022_CT_Raw, file = "ReADI_CBG_2022_CT_Raw.RData")
+
+ReADI_CBG_2022_C_Raw <- ReADI_CBG_2022_C_Raw[!ReADI_CBG_2022_C_Raw$B01003_001 == 0,] 
+save(ReADI_CBG_2022_C_Raw, file = "ReADI_CBG_2022_C_Raw.RData")
+```
+  </div>
+</div>
+  
+<br><br>
+
+## Missing Values
+***
+
+Below is a summary of the amount of missing values among variables with missing information:
+
+<div class = "row">
+<div class = "col-md-6">
+|Variable       |CBG N (/%)   |CT N (/%)   |C N (/%)    |
+|:--------------|:------------|:-----------|:-----------|
+|B19013_001     |15042 (6)    |724 (1)     |1 (<1)      |
+|B25064_001     |65920 (27)   |4392 (5)    |10 (<1)     |
+|B25077_001     |21260 (9)    |2344 (3)    |3 (<1)      |
+|B25088_002     |29910 (12)   |2796 (3)    |6 (<1)      |
+</div>
+
+<div class = "col-md-6">
+</div>
+</div>
+
+<br>
+
+Among the missing data there were 12 counties which had NAs for one of these variables:
+
+<div style="margin:16px 0">
+ <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code569"><h4 class="text-white">County NAs</h4></button></center>
+  <div id="code569" class="collapse">
+|County, ST          |Population|B19013_001|B25064_001|B25077_001|B25088_002|
+|:------------------|:---------|:---------|:---------|:---------|:---------|
+|Alpine County, CA   |1,515     |\$101,125 |<strong><strong>NA</strong></strong>|\$463,900 |\$2,401   |
+|Kalawao County, HI  |50        |\$87,813  |\$1,297   |<strong><strong>NA</strong></strong>|<strong><strong>NA</strong></strong>|
+|Owsley County, KY   |4,054     |\$32,844  |<strong><strong>NA</strong></strong>|\$78,500  |\$947     |
+|Cameron Parish, LA  |5,447     |\$69,847  |<strong><strong>NA</strong></strong>|\$177,600 |\$1,270   |
+|Buffalo County, SD  |1,859     |\$42,917  |\$575     |\$103,800 |<strong><strong>NA</strong></strong>|
+|Borden County, TX   |686       |\$80,625  |<strong><strong>NA</strong></strong>|\$104,200 |<strong><strong>NA</strong></strong>|
+|Glasscock County, TX|1,068     |\$112,188 |<strong><strong>NA</strong></strong>|\$258,300 |\$859     |
+|Kenedy County, TX   |116       |\$45,455  |<strong><strong>NA</strong></strong>|<strong><strong>NA</strong></strong>|<strong><strong>NA</strong></strong>|
+|King County, TX     |216       |\$59,375  |<strong><strong>NA</strong></strong>|<strong><strong>NA</strong></strong>|<strong><strong>NA</strong></strong>|
+|Loving County, TX   |96        |<strong><strong>NA</strong></strong>|<strong><strong>NA</strong></strong>|\$218,800 |<strong><strong>NA</strong></strong>|
+|Terrell County, TX  |862       |\$52,813  |<strong><strong>NA</strong></strong>|\$119,800 |\$1,274   |
+|Daggett County, UT  |638       |\$61,250  |<strong><strong>NA</strong></strong>|\$252,400 |\$1,238   |
+  </div>
+</div>
+
+Of note, the above counties all consist of low population areas which seems to be the source for the missing information. Kalawao County in Hawaii is the most unique in that it is a very isolated and protected community which originated as a quarantine village for those with leprosy and the remaining inhabitants are all that are remaining and will be able to reside there. 
+
+Of important note is of all of the measures which have missing information for all geographical regions, it consists of the four currency variables which are those at the center of the standardization issues. This means that imputation is required only for the very measures which are driving the neighborhood ADI compounding the ADI issues even further. 
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code498">Show Code</button>
+  <div id="code498" class="collapse">
+```{r, eval = F}
+# By Variables
+NA_Vars <- ReADI_CBG_2022_CBG_Raw[, colSums(is.na(ReADI_CBG_2022_CBG_Raw)) > 0]
+NA_Vars <- as.data.frame(colSums(is.na(NA_Vars))) 
+colnames(NA_Vars) <- "CBG_N"
+
+NA_Vars$Perc_NA_CBG <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,]/nrow(ReADI_CBG_2022_CBG_Raw))*100,2)})
+NA_Vars_CT <- ReADI_CBG_2022_CT_Raw[, colSums(is.na(ReADI_CBG_2022_CT_Raw)) > 0]
+identical(colnames(NA_Vars_CT), rownames(NA_Vars))
+NA_Vars$CT_N <- colSums(is.na(NA_Vars_CT))
+
+NA_Vars$Perc_NA_CT <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,"CT_N"]/nrow(ReADI_CBG_2022_CT_Raw))*100,2)})
+NA_Vars_C <- ReADI_CBG_2022_C_Raw[, colSums(is.na(ReADI_CBG_2022_C_Raw)) > 0]
+identical(colnames(NA_Vars_C), rownames(NA_Vars))
+NA_Vars$C_N <- colSums(is.na(NA_Vars_C))
+NA_Vars$Perc_NA_C <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,"C_N"]/nrow(ReADI_CBG_2022_C_Raw))*100,2)})
+
+# 
+CountiesMissing <- ReADI_CBG_2022_C_Raw[rowSums(is.na(ReADI_CBG_2022_C_Raw)) > 0,]
+
+# By Geo Area
+NA_CBG_GEOs <- ReADI_CBG_2022_CBG_Raw[rowSums(is.na(ReADI_CBG_2022_CBG_Raw)) > 0,]
+NA_CBG_GEOs <- as.data.frame(rowSums(is.na(NA_CBG_GEOs))) 
+table(NA_CBG_GEOs[1]) # 4 max
+
+NA_CT_GEOs <- ReADI_CBG_2022_CT_Raw[rowSums(is.na(ReADI_CBG_2022_CT_Raw)) > 0,]
+NA_CT_GEOs <- as.data.frame(rowSums(is.na(NA_CT_GEOs))) 
+table(NA_CT_GEOs[1]) # 4 max
+
+NA_C_GEOs <- ReADI_CBG_2022_C_Raw[rowSums(is.na(ReADI_CBG_2022_C_Raw)) > 0,]
+NA_C_GEOs <- as.data.frame(rowSums(is.na(NA_C_GEOs))) 
+table(NA_C_GEOs[1]) # 4 max
+```
+  </div>
+</div>
+  
+<br><br>
+
+### Imputation
+***
+
+We will perform a nearest neighbor imputation using type Queen contiguity. The median values of all border touching geographies will be used to replace NAs for the respective geographical levels within state. Imputation will happen iteratively until no further CBGs can be imputed. Among those which can't be imputed in this way we will then impute with the average of the upper level geography if appropriate.
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code531">Imputation Function</button>
+  <div id="code531" class="collapse">
+```{r, eval = F}
+impute.fun <- function(data, var, shape) {
+  variable <- data[, c("GEOID", var)]
+  colnames(variable) <- c("GEOID", "estimate")
+  message(paste0(sum(is.na(variable$estimate)), " missing before imputation."))
+  df <- shape %>% left_join(variable, by = "GEOID")
+  df <- df[!is.na(st_dimension(df)),]
+  df$State <- substr(df$GEOID, 1, 2)
+  df$raw.estimate <- df$estimate
+  
+  # set check values for iterative while loop:
+  missing.pre <- 1
+  missing.post <- 0
+
+  # while loop for iterations!
+  while(missing.pre > missing.post) { 
+    missing.pre <- sum(is.na(df$estimate))
+    imputed <- bind_rows(lapply(unique(df$State), function(x){
+      df2 <- df[df$State == x,]
+      df2$index <- 1:nrow(df2)
+      df2$nb <- spdep::poly2nb(df2, queen = TRUE)
+      df2$geometry <- NULL
+      df2$imputed <- unlist(lapply(df2$nb, function(z){
+        median(df2$estimate[z], na.rm = T)}))
+      df2 <- df2[, c("GEOID", "estimate", "State", "imputed")]
+      return(df2)
+      }))
+    df$imputed <- NULL
+    df <- left_join(df, imputed, by = c("GEOID", "estimate", "State"))
+    df$estimate <- ifelse(is.na(df$estimate), df$imputed, df$estimate)
+    missing.post <- sum(is.na(df$estimate))
+  }
+  message(paste0(sum(is.na(df$estimate)), " missing after imputing."))
+  return(df)
+}
+```
+  </div>
+</div>
+
+> CBG
+
+Imputation was successful in that only the NAs were imputed and replaced in the overall dataset though there are some NAs remaining which will be investigated below. Out of interest the following table will include how correlated the actual measure is to a fully imputed measure.
+
+<div class = "row">
+<div class = "col-md-6">
+|Variable       |$r$          |*p*value        |NAs Remaining   |
+|:--------------|:------------|:---------------|:---------------|
+|B19013_001     |0.757        |$<2.2x10^{-16}$ |14              |
+|B25064_001     |0.831        |$<2.2x10^{-16}$ |29              |
+|B25077_001     |0.918        |$<2.2x10^{-16}$ |14              |
+|B25088_002     |0.869        |$<2.2x10^{-16}$ |15              |
+</div>
+
+<div class = "col-md-6">
+</div>
+</div>
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code581">Show Code</button>
+  <div id="code581" class="collapse">
+```{r, eval = F}
+load("ACS_CBG_2022_Geometry.RData")
+load("ReADI_CBG_2022_CBG_Raw.RData")
+
+B19013_Impute_CBG <- impute.fun(data = ReADI_CBG_2022_CBG_Raw, var = "B19013_001", shape = ACS_CBG_2022_Geometry) # Apparently there was 
+head(B19013_Impute_CBG)
+cor.test(B19013_Impute_CBG$estimate, B19013_Impute_CBG$raw.estimate) # should always be 1 as NAs are removed to ensure nothing changed to the non-missing data.
+cor.test(B19013_Impute_CBG$imputed, B19013_Impute_CBG$raw.estimate) 
+B19013_Impute_CBG$geometry <- NULL
+B19013_Impute_CBG <- B19013_Impute_CBG[, c("GEOID", "estimate")]
+colnames(B19013_Impute_CBG) <- c("GEOID", "B19013_001")
+
+B25064_Impute_CBG <- impute.fun(data = ReADI_CBG_2022_CBG_Raw, var = "B25064_001", shape = ACS_CBG_2022_Geometry)
+cor.test(B25064_Impute_CBG$estimate, B25064_Impute_CBG$raw.estimate)
+cor.test(B25064_Impute_CBG$imputed, B25064_Impute_CBG$raw.estimate) 
+B25064_Impute_CBG$geometry <- NULL
+B25064_Impute_CBG <- B25064_Impute_CBG[, c("GEOID", "estimate")]
+colnames(B25064_Impute_CBG) <- c("GEOID", "B25064_001")
+
+B25077_Impute_CBG <- impute.fun(data = ReADI_CBG_2022_CBG_Raw, var = "B25077_001", shape = ACS_CBG_2022_Geometry)
+cor.test(B25077_Impute_CBG$estimate, B25077_Impute_CBG$raw.estimate)
+cor.test(B25077_Impute_CBG$imputed, B25077_Impute_CBG$raw.estimate) 
+B25077_Impute_CBG$geometry <- NULL
+B25077_Impute_CBG <- B25077_Impute_CBG[, c("GEOID", "estimate")]
+colnames(B25077_Impute_CBG) <- c("GEOID", "B25077_001")
+
+B25088_Impute_CBG <- impute.fun(data = ReADI_CBG_2022_CBG_Raw, var = "B25088_002", shape = ACS_CBG_2022_Geometry)
+cor.test(B25088_Impute_CBG$estimate, B25088_Impute_CBG$raw.estimate)
+cor.test(B25088_Impute_CBG$imputed, B25088_Impute_CBG$raw.estimate) 
+B25088_Impute_CBG$geometry <- NULL
+B25088_Impute_CBG <- B25088_Impute_CBG[, c("GEOID", "estimate")]
+colnames(B25088_Impute_CBG) <- c("GEOID", "B25088_002")
+
+CBG_2022_Imputed <- plyr::join(B19013_Impute_CBG, B25064_Impute_CBG, by = "GEOID")
+CBG_2022_Imputed <- plyr::join(CBG_2022_Imputed, B25077_Impute_CBG, by = "GEOID")
+CBG_2022_Imputed <- plyr::join(CBG_2022_Imputed, B25088_Impute_CBG, by = "GEOID")
+save(CBG_2022_Imputed, file = "CBG_2022_Imputed.RData")
+
+sum(is.na(CBG_2022_Imputed$B19013_001)) 
+sum(is.na(CBG_2022_Imputed$B25064_001)) 
+sum(is.na(CBG_2022_Imputed$B25077_001)) 
+sum(is.na(CBG_2022_Imputed$B25088_002)) 
+
+ReADI_CBG_2022_Imp <- ReADI_CBG_2022_CBG_Raw[, !colnames(ReADI_CBG_2022_CBG_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
+ReADI_CBG_2022_Imp <- plyr::join(ReADI_CBG_2022_Imp, CBG_2022_Imputed, by = "GEOID")
+save(ReADI_CBG_2022_Imp, file = "ReADI_CBG_2022_Imp.RData")
+```
+  </div>
+</div>
+
+> CT
+
+<div class = "row">
+<div class = "col-md-6">
+|Variable       |$r$          |*p*value        |NAs Remaining   |
+|:--------------|:------------|:---------------|:---------------|
+|B19013_001     |0.802        |$<2.2x10^{-16}$ |4               |
+|B25064_001     |0.839        |$<2.2x10^{-16}$ |4               |
+|B25077_001     |0.920        |$<2.2x10^{-16}$ |4               |
+|B25088_002     |0.894        |$<2.2x10^{-16}$ |4               |
+</div>
+
+<div class = "col-md-6">
+</div>
+</div>
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code639">Show Code</button>
+  <div id="code639" class="collapse">
+```{r, eval = F}
+load("ACS_CT_2022_Geometry.RData")
+load("ReADI_CBG_2022_CT_Raw.RData")
+
+B19013_Impute_CT <- impute.fun(data = ReADI_CBG_2022_CT_Raw, var = "B19013_001", shape = ACS_CT_2022_Geometry)
+cor.test(B19013_Impute_CT$estimate, B19013_Impute_CT$raw.estimate) # should always be 1, as nas are removed, to ensure nothing changed to the non-missing data.
+cor.test(B19013_Impute_CT$imputed, B19013_Impute_CT$raw.estimate) 
+B19013_Impute_CT$geometry <- NULL
+B19013_Impute_CT <- B19013_Impute_CT[, c("GEOID", "estimate")]
+colnames(B19013_Impute_CT) <- c("GEOID", "B19013_001")
+
+B25064_Impute_CT <- impute.fun(data = ReADI_CBG_2022_CT_Raw, var = "B25064_001", shape = ACS_CT_2022_Geometry)
+cor.test(B25064_Impute_CT$estimate, B25064_Impute_CT$raw.estimate)
+cor.test(B25064_Impute_CT$imputed, B25064_Impute_CT$raw.estimate) 
+B25064_Impute_CT$geometry <- NULL
+B25064_Impute_CT <- B25064_Impute_CT[, c("GEOID", "estimate")]
+colnames(B25064_Impute_CT) <- c("GEOID", "B25064_001")
+
+B25077_Impute_CT <- impute.fun(data = ReADI_CBG_2022_CT_Raw, var = "B25077_001", shape = ACS_CT_2022_Geometry)
+cor.test(B25077_Impute_CT$estimate, B25077_Impute_CT$raw.estimate)
+cor.test(B25077_Impute_CT$imputed, B25077_Impute_CT$raw.estimate) 
+B25077_Impute_CT$geometry <- NULL
+B25077_Impute_CT <- B25077_Impute_CT[, c("GEOID", "estimate")]
+colnames(B25077_Impute_CT) <- c("GEOID", "B25077_001")
+
+B25088_Impute_CT <- impute.fun(data = ReADI_CBG_2022_CT_Raw, var = "B25088_002", shape = ACS_CT_2022_Geometry)
+cor.test(B25088_Impute_CT$estimate, B25088_Impute_CT$raw.estimate)
+cor.test(B25088_Impute_CT$imputed, B25088_Impute_CT$raw.estimate) 
+B25088_Impute_CT$geometry <- NULL
+B25088_Impute_CT <- B25088_Impute_CT[, c("GEOID", "estimate")]
+colnames(B25088_Impute_CT) <- c("GEOID", "B25088_002")
+
+CT_2022_Imputed <- plyr::join(B19013_Impute_CT, B25064_Impute_CT, by = "GEOID")
+CT_2022_Imputed <- plyr::join(CT_2022_Imputed, B25077_Impute_CT, by = "GEOID")
+CT_2022_Imputed <- plyr::join(CT_2022_Imputed, B25088_Impute_CT, by = "GEOID")
+save(CT_2022_Imputed, file = "CT_2022_Imputed.RData")
+
+sum(is.na(CT_2022_Imputed$B19013_001)) 
+sum(is.na(CT_2022_Imputed$B25064_001)) 
+sum(is.na(CT_2022_Imputed$B25077_001)) 
+sum(is.na(CT_2022_Imputed$B25088_002)) 
+
+ReADI_CT_2022_Imp <- ReADI_CBG_2022_CT_Raw[, !colnames(ReADI_CBG_2022_CT_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
+ReADI_CT_2022_Imp <- plyr::join(ReADI_CT_2022_Imp, CT_2022_Imputed, by = "GEOID")
+save(ReADI_CT_2022_Imp, file = "ReADI_CT_2022_Imp.RData")
+```
+  </div>
+</div>
+
+> C
+
+<div class = "row">
+<div class = "col-md-6">
+|Variable       |$r$          |*p*value        |NAs Remaining   |
+|:--------------|:------------|:---------------|:---------------|
+|B19013_001     |0.782        |$<2.2x10^{-16}$ |0               |
+|B25064_001     |0.832        |$<2.2x10^{-16}$ |0               |
+|B25077_001     |0.862        |$<2.2x10^{-16}$ |0               |
+|B25088_002     |0.858        |$<2.2x10^{-16}$ |0               |
+</div>
+
+<div class = "col-md-6">
+</div>
+</div>
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code701">Show Code</button>
+  <div id="code701" class="collapse">
+```{r, eval = F}
+load("ACS_C_2022_Geometry.RData")
+load("ReADI_CBG_2022_C_Raw.RData")
+
+## For the code to work you need to remove state 11 (DC) as it has only one county and will trigger an error.
+table(ReADI_CBG_2022_C_Raw$State)
+data = ReADI_CBG_2022_C_Raw[!ReADI_CBG_2022_C_Raw$State == " District of Columbia",]
+geoid_rm <- ReADI_CBG_2022_C_Raw[ReADI_CBG_2022_C_Raw$State == " District of Columbia", "GEOID"]
+shape = ACS_C_2022_Geometry[!ACS_C_2022_Geometry$GEOID %in% geoid_rm,]
+
+B19013_Impute_C <- impute.fun(data = data, var = "B19013_001", shape = shape)
+cor.test(B19013_Impute_C$estimate, B19013_Impute_C$raw.estimate)
+cor.test(B19013_Impute_C$imputed, B19013_Impute_C$raw.estimate) 
+B19013_Impute_C$geometry <- NULL
+B19013_Impute_C <- B19013_Impute_C[, c("GEOID", "estimate")]
+colnames(B19013_Impute_C) <- c("GEOID", "B19013_001")
+
+B25064_Impute_C <- impute.fun(data = data, var = "B25064_001", shape = shape)
+cor.test(B25064_Impute_C$estimate, B25064_Impute_C$raw.estimate)
+cor.test(B25064_Impute_C$imputed, B25064_Impute_C$raw.estimate) 
+B25064_Impute_C$geometry <- NULL
+B25064_Impute_C <- B25064_Impute_C[, c("GEOID", "estimate")]
+colnames(B25064_Impute_C) <- c("GEOID", "B25064_001")
+
+B25077_Impute_C <- impute.fun(data = data, var = "B25077_001", shape = shape)
+cor.test(B25077_Impute_C$estimate, B25077_Impute_C$raw.estimate)
+cor.test(B25077_Impute_C$imputed, B25077_Impute_C$raw.estimate) 
+B25077_Impute_C$geometry <- NULL
+B25077_Impute_C <- B25077_Impute_C[, c("GEOID", "estimate")]
+colnames(B25077_Impute_C) <- c("GEOID", "B25077_001")
+
+B25088_Impute_C <- impute.fun(data = data, var = "B25088_002", shape = shape)
+cor.test(B25088_Impute_C$estimate, B25088_Impute_C$raw.estimate)
+cor.test(B25088_Impute_C$imputed, B25088_Impute_C$raw.estimate) 
+B25088_Impute_C$geometry <- NULL
+B25088_Impute_C <- B25088_Impute_C[, c("GEOID", "estimate")]
+colnames(B25088_Impute_C) <- c("GEOID", "B25088_002")
+
+C_2022_Imputed <- plyr::join(B19013_Impute_C, B25064_Impute_C, by = "GEOID")
+C_2022_Imputed <- plyr::join(C_2022_Imputed, B25077_Impute_C, by = "GEOID")
+C_2022_Imputed <- plyr::join(C_2022_Imputed, B25088_Impute_C, by = "GEOID")
+save(C_2022_Imputed, file = "C_2022_Imputed.RData")
+
+sum(is.na(C_2022_Imputed$B19013_001)) 
+sum(is.na(C_2022_Imputed$B25064_001)) 
+sum(is.na(C_2022_Imputed$B25077_001)) 
+sum(is.na(C_2022_Imputed$B25088_002)) 
+
+ReADI_C_2022_Imp <- ReADI_CBG_2022_C_Raw[, !colnames(ReADI_CBG_2022_C_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
+ReADI_C_2022_Imp <- plyr::join(ReADI_C_2022_Imp, C_2022_Imputed, by = "GEOID")
+
+# replacing District of Columbia data removed in previous line.
+identical(ReADI_CBG_2022_C_Raw$GEOID, ReADI_C_2022_Imp$GEOID)
+ReADI_C_2022_Imp$B19013_001 <- ifelse(is.na(ReADI_C_2022_Imp$B19013_001), ReADI_CBG_2022_C_Raw$B19013_001, ReADI_C_2022_Imp$B19013_001)
+ReADI_C_2022_Imp$B25064_001 <- ifelse(is.na(ReADI_C_2022_Imp$B25064_001), ReADI_CBG_2022_C_Raw$B25064_001, ReADI_C_2022_Imp$B25064_001)
+ReADI_C_2022_Imp$B25077_001 <- ifelse(is.na(ReADI_C_2022_Imp$B25077_001), ReADI_CBG_2022_C_Raw$B25077_001, ReADI_C_2022_Imp$B25077_001)
+ReADI_C_2022_Imp$B25088_002 <- ifelse(is.na(ReADI_C_2022_Imp$B25088_002), ReADI_CBG_2022_C_Raw$B25088_002, ReADI_C_2022_Imp$B25088_002)
+save(ReADI_C_2022_Imp, file = "ReADI_C_2022_Imp.RData")
+```
+  </div>
+</div>
+  
+<br><br>
+
+### Missing After Imputation
+***
+
+<br>
+
+The main reason why there would still be missing information after imputation is due to the imputation method used which required measures due to bordering geographies which would not impute areas which have no bordering areas such as islands. We will investigate what areas are remaining and if it makes sense to impute for these regions.
+
+> Census Tracts
+
+Of the missing data remaining after imputation there are 9 total census tracts, 8 of which are NAs for all measures. Information based on [Census Reporter](https://censusreporter.org/profiles/):
+
+<div style="margin:16px 0">
+ <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855"><h4 class="text-white">CT NAs</h4></button></center>
+  <div id="code855" class="collapse">
+
+|GEOID      |CT   |Location                  |Population|CT Information                         |
+|:----------|:----|:-------------------------|:---------|:--------------------------------------|
+|06083980100|9801 |Santa Barbara County, CA  |10        |Channel Islands National Park.         |
+|06111980000|9800 |Ventura County, CA        |107       |Naval Facility San Nicolas Island.     |
+|12087980100|9801 |Monroe County, FL         |2         |Dry Tortugas is a National Park.       |
+|26083980100|9801 |Keweenaw County, MI       |3         |Isle Royale Island is a National Park. |
+  </div>
+</div>
+
+As all of the census tracts which have remaining NAs, they are either national parks whose population consist of rangers or a naval base these CTs will be removed.
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code787">Show Code</button>
+  <div id="code787" class="collapse">
+```{r, eval = F}
+load("ReADI_CT_2022_Imp.RData")
+load("ACS_CT_2022_Geometry.RData")
+B19013_001_NAs <- ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp$B19013_001), c("GEOID", "Tract", "County", "State")] 
+B25064_001_NAs <- ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp$B25064_001), c("GEOID", "Tract", "County", "State")] 
+B25077_001_NAs <- ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp$B25077_001), c("GEOID", "Tract", "County", "State")] 
+B25088_002_NAs <- ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp$B25088_002), c("GEOID", "Tract", "County", "State")] 
+CT_Missing <- merge(B19013_001_NAs, B25064_001_NAs, all = T)
+CT_Missing <- merge(CT_Missing, B25077_001_NAs, all = T)
+CT_Missing <- merge(CT_Missing, B25088_002_NAs, all = T)
+CT_rm <- c("06083980100", "06111980000", "12087980100", "26083980100")
+ReADI_CT_2022_Imp <- ReADI_CT_2022_Imp[!ReADI_CT_2022_Imp$GEOID %in% CT_rm, ] # 84535 remaining - 4 removed
+save(ReADI_CT_2022_Imp, file = "ReADI_CT_2022_Imp.RData")
+```
+  </div>
+</div>
+
+> Census Block Groups
+
+Observing the specific census block groups which remain NAs after imputation summarized in the table below: 
+
+
+<div style="margin:16px 0">
+ <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855"><h4 class="text-white">CBG NAs</h4></button></center>
+  <div id="code855" class="collapse">
+|GEOID       |CBG.CT   |Location                  |Population|CT Information                        |Removed|
+|:-----------|:--------|:-------------------------|:---------|:-------------------------------------|:------|
+|022200002006|6.2      |Sitka City & Borough, AK  |372       |Series of Islands                     |       |
+|060290057001|1.57     |Kern County, CA           |2,851     |Wherry Housing                        |       |
+|060375991001|1.5991   |Los Angeles County, CA    |201       |San Clemente Islands                  |       |
+|060839801001|1.9801   |Santa Barbara County, CA  |10        |Channel Islands National Park         |<strong><strong>X</strong></strong>|
+|061119800001|1.9800   |Ventura County, CA        |107       |Naval Facility San Nicolas Island     |<strong><strong>X</strong></strong>|
+|120379703041|1.9703.04|Franklin County, FL       |970       |Saint George Island                   |       |
+|120879709001|1.9709   |Monroe County, FL         |1,033     |Lower Matecumbe Beach                 |       |
+|120879801001|1.9801   |Monroe County, FL         |2         |Dry Tortugas is a National Park       |<strong><strong>X</strong></strong>|
+|230050044022|2.44.02  |Cumberland County, ME     |562       |Cousins Island                        |       |
+|230139711004|4.9711   |Knox County, ME.          |138       |Isle au Haut and Matinicus Isle       |       |
+|230159756005|5.9756   |Lincoln County, ME        |119       |Monhegan Island                       |       |
+|250072004006|6.2004   |Dukes County, MA          |38        |Gosnold                               |       |
+|260839801001|1.9801   |Keweenaw County, MI       |3         |Isle Royale Island is a National Park |<strong><strong>X</strong></strong>|
+|260979505001|1.9505   |Mackinac County, MI       |44        |Bois Blanc Island                     |       |
+|360050001001|1.1      |Bronx County, NY          |4,446     |Rikers Island Prison                  |<strong><strong>X</strong></strong>|
+|360610240002|2.240    |New York County, NY       |2,278     |Manhattan Psychiatric Center          |<strong><strong>X</strong></strong>|
+|360610240003|3.240    |New York County, NY       |38        |Waste Facility Plant                  |       |
+|360810916034|4.916.03 |Queens County, NY         |2,230     |Queens                                |       |
+|360810916035|5.916.03 |Queens County, NY         |444       |Queens                                |       |
+|360810916036|6.916.03 |Queens County, NY         |684       |Queens                                |       |
+|361031702061|1.1702.06|Suffolk County, NY        |53        |Fishers Island                        |       |
+|370959201013|3.9201.01|Hyde County, NC           |715       |Ocracoke Island                       |       |
+|390430419004|4.419    |Erie County, OH           |221       |Kelleys Island                        |       |
+|440050401052|2.401.05 |Newport County, RI        |98        |Prudance Park and Homestead on Island |       |
+|510010906001|1.906    |Accomack County, VA       |345       |Tangier Island                        |       |
+|530350927043|3.927.04 |Kitsap County, WA         |14        |Blake Island Marine State Park        |<strong><strong>X</strong></strong>|
+|530530724101|1.724.10 |Pierce County, WA         |1,435     |Fox Island                            |       |
+|530530724102|2.724.10 |Pierce County, WA         |1,080     |Fox Island                            |       |
+|530530724103|3.724.10 |Pierce County, WA         |1,129     |Fox Island                            |       |
+|530530726033|3.726.03 |Pierce County, WA         |1,621     |Anderson Island                       |       |
+|530530726035|5.726.03 |Pierce County, WA         |371       |McNeil Island                         |       |
+|720531501062|2.1501.06|Fajardo Municipio, PR     |38        |Palomino Island                       |       |
+  </div>
+</div>
+
+Of the CBGs which remain missing after imputation it is clear that the vast majority of them were not imputed due to simply not directly bordering any other CBGs. These will be given the values attributed to the CT they are a part of for imputation. There are a few which will be removed as indicated in the removed column above based on if they represent national parks containing small population of rangers and areas consisting fully of group quarters.
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code860">Show Code</button>
+  <div id="code860" class="collapse">
+```{r, eval = F}
+load("ReADI_CBG_2022_Imp.RData")
+load("ReADI_CT_2022_Imp.RData")
+B19013_001_NAs <- ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp$B19013_001), c("GEOID", "Tract", "County", "State")] # 14
+B25064_001_NAs <- ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp$B25064_001), c("GEOID", "Tract", "County", "State")] # 29
+B25077_001_NAs <- ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp$B25077_001), c("GEOID", "Tract", "County", "State")] # 14
+B25088_002_NAs <- ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp$B25088_002), c("GEOID", "Tract", "County", "State")] # 15
+CBG_Missing <- merge(B19013_001_NAs, B25064_001_NAs, all = T)
+CBG_Missing <- merge(CBG_Missing, B25077_001_NAs, all = T)
+CBG_Missing <- merge(CBG_Missing, B25088_002_NAs, all = T)
+CBG_Missing <- unique(CBG_Missing)
+CBG_rm <- c("060839801001", "061119800001", "120879801001", "260839801001", "360050001001", "360610240002", "530350927043")
+ReADI_CBG_2022_Imp <- ReADI_CBG_2022_Imp[!ReADI_CBG_2022_Imp$GEOID %in% CBG_rm, ] # 240165 remaining - 7 removed
+```
+  </div>
+</div>
+  
+<br><br>
+
+### Imputing Remaining CBGs
+***
+
+The remaining CBGs will be imputed with the CT measure they are located in resulting in the final results:
+
+<div class = "row">
+<div class = "col-md-4">
+|Area   |NAs |Amount  |
+|:------|:---|:-------|
+|CBG    |0   |240,165 |
+|CT     |0   |84,535  |
+|C      |0   |3,222   |
+
+</div>
+
+<div class = "col-md-8">
+</div>
+</div>
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1019">Show Code</button>
+  <div id="code1019" class="collapse">
+```{r, eval = F}
+impute_CBG_geo <- CBG_Missing[!CBG_Missing$GEOID %in% CBG_rm, "GEOID"]
+impute_CT_geo <- sapply(length(impute_CBG_geo), function(x){
+  substring(impute_CBG_geo, 1, 11)
+})
+impute_CT_geo <- impute_CT_geo[,1]
+
+impute_data <- ReADI_CT_2022_Imp[ReADI_CT_2022_Imp$GEOID %in% impute_CT_geo, c("GEOID", "B19013_001", "B25064_001", "B25077_001", "B25088_002")]
+ReADI_CBG_2022_Imp$GEOID_CT <- substring(ReADI_CBG_2022_Imp$GEOID, 1, 11)
+ReADI_CBG_2022_Imp$B19013_001_T <- ReADI_CBG_2022_Imp$B19013_001
+ReADI_CBG_2022_Imp$B25064_001_T <- ReADI_CBG_2022_Imp$B25064_001
+ReADI_CBG_2022_Imp$B25077_001_T <- ReADI_CBG_2022_Imp$B25077_001
+ReADI_CBG_2022_Imp$B25088_002_T <- ReADI_CBG_2022_Imp$B25088_002
+
+# B19013_001
+CBG_Imp <- as.data.frame(sapply(1:nrow(impute_data), function(x){
+  ifelse(ReADI_CBG_2022_Imp$GEOID_CT == impute_data[x, "GEOID"] & is.na(ReADI_CBG_2022_Imp[,"B19013_001_T"]), impute_data[x,"B19013_001"], ReADI_CBG_2022_Imp$B19013_001_T)
+}))
+ReADI_CBG_2022_Imp$B19013_001 <- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11],CBG_Imp[,12],CBG_Imp[,13],CBG_Imp[,14],CBG_Imp[,15],CBG_Imp[,16],CBG_Imp[,17],CBG_Imp[,18],CBG_Imp[,19],CBG_Imp[,20])
+cor.test(ReADI_CBG_2022_Imp$B19013_001_T, ReADI_CBG_2022_Imp$B19013_001)
+sum(is.na(ReADI_CBG_2022_Imp$B19013_001_T))
+sum(is.na(ReADI_CBG_2022_Imp$B19013_001))
+
+# B25064_001
+CBG_Imp <- as.data.frame(sapply(1:nrow(impute_data), function(x){
+  ifelse(ReADI_CBG_2022_Imp$GEOID_CT == impute_data[x, "GEOID"] & is.na(ReADI_CBG_2022_Imp[,"B25064_001_T"]), impute_data[x,"B25064_001"], ReADI_CBG_2022_Imp$B25064_001_T)
+}))
+ReADI_CBG_2022_Imp$B25064_001 <- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11],CBG_Imp[,12],CBG_Imp[,13],CBG_Imp[,14],CBG_Imp[,15],CBG_Imp[,16],CBG_Imp[,17],CBG_Imp[,18],CBG_Imp[,19],CBG_Imp[,20])
+cor.test(ReADI_CBG_2022_Imp$B25064_001_T, ReADI_CBG_2022_Imp$B25064_001)
+sum(is.na(ReADI_CBG_2022_Imp$B25064_001_T))
+sum(is.na(ReADI_CBG_2022_Imp$B25064_001))
+
+# B25077_001
+CBG_Imp <- as.data.frame(sapply(1:nrow(impute_data), function(x){
+  ifelse(ReADI_CBG_2022_Imp$GEOID_CT == impute_data[x, "GEOID"] & is.na(ReADI_CBG_2022_Imp[,"B25077_001_T"]), impute_data[x,"B25077_001"], ReADI_CBG_2022_Imp$B25077_001_T)
+}))
+ReADI_CBG_2022_Imp$B25077_001 <- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11],CBG_Imp[,12],CBG_Imp[,13],CBG_Imp[,14],CBG_Imp[,15],CBG_Imp[,16],CBG_Imp[,17],CBG_Imp[,18],CBG_Imp[,19],CBG_Imp[,20])
+cor.test(ReADI_CBG_2022_Imp$B25077_001_T, ReADI_CBG_2022_Imp$B25077_001)
+sum(is.na(ReADI_CBG_2022_Imp$B25077_001_T))
+sum(is.na(ReADI_CBG_2022_Imp$B25077_001))
+
+# B25088_002
+CBG_Imp <- as.data.frame(sapply(1:nrow(impute_data), function(x){
+  ifelse(ReADI_CBG_2022_Imp$GEOID_CT == impute_data[x, "GEOID"] & is.na(ReADI_CBG_2022_Imp[,"B25088_002_T"]), impute_data[x,"B25088_002"], ReADI_CBG_2022_Imp$B25088_002_T)
+}))
+ReADI_CBG_2022_Imp$B25088_002 <- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11],CBG_Imp[,12],CBG_Imp[,13],CBG_Imp[,14],CBG_Imp[,15],CBG_Imp[,16],CBG_Imp[,17],CBG_Imp[,18],CBG_Imp[,19],CBG_Imp[,20])
+cor.test(ReADI_CBG_2022_Imp$B25088_002_T, ReADI_CBG_2022_Imp$B25088_002)
+sum(is.na(ReADI_CBG_2022_Imp$B25088_002_T))
+sum(is.na(ReADI_CBG_2022_Imp$B25088_002))
+
+ReADI_CBG_2022_Imp$GEOID_CT <- NULL
+ReADI_CBG_2022_Imp$B19013_001_T <- NULL
+ReADI_CBG_2022_Imp$B25064_001_T <- NULL
+ReADI_CBG_2022_Imp$B25077_001_T <- NULL
+ReADI_CBG_2022_Imp$B25088_002_T <- NULL
+sum(is.na(ReADI_CBG_2022_Imp)) # 0
+save(ReADI_CBG_2022_Imp, file = "ReADI_CBG_2022_Imp.RData")
+
+sum(is.na(ReADI_CBG_2022_Imp))
+sum(is.na(ReADI_CT_2022_Imp))
+sum(is.na(ReADI_C_2022_Imp))
+```
+  </div>
+</div>
+
+<br><br>
+
+# ReADI Production
+
+<br>
+
+## Method
+
+<br>
+
+These steps are done separately at the county, census tract, and census block group levels. 
+
+<strong><strong>1.</strong></strong> Using the imputed census data taken at each geography the 17 variables will be calculated. Below is a table summarizing the variables, census tables, and formulas we will be using to calculate the ReADI:
+
+<div style="margin:16px 0">
+ <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1111"><h4 class="text-white">CBG ReADI Variables</h4></button></center>
+  <div id="code1111" class="collapse">
++-----------------------------------------------------------------------+---------+-------+:----------------------------------------------:+
+|Census Variable                                                        |Name     |Table  |<center>Formula</center>                        |
++=======================================================================+=========+=======+:==============================================:+
+|Median family income, \$                                               |MEDFI    |B19013 |$001$                                           |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Income disparity$^a$                                                   |INCDIS   |B19001 |$-ln({\sum(002-004)+1\over\sum(014-017)+1}x100)$|
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Families below poverty level, %                                        |BELPL    |B17017 |${002\over001}x100$                             |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Population below 150% of the poverty threshold, %                      |PL150    |C17002 |${\sum(002-005)\over 001}x100$                  |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Population ≥25y with < a high school diploma, %                        |EDU9YR   |B15003 |${\sum(002-016)\over 001}x100$                  |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Population ≥25y with at least a bachelor's degree, %                   |HSDPNHIGH|B15003 |${\sum(022-025)\over 001}x100$                  |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Employed persons ≥16y in white-collar occupations, %                   |EMPWC    |C24010 |${\sum(003,027,039,063)\over 001}x100$          |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Civilian labor force population ≥16 y unemployed, %                    |UNEMP    |B23025 |${005\over003}x100$                             |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Median home value, \$                                                  |MEDHV    |B25077 |$001$                                           |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Median gross rent, \$                                                  |MEDRNT   |B25064 |$001$                                           |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Median monthly mortgage, \$                                            |MEDMORT  |B25088 |$002$                                           |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Owner-occupied housing units, %                                        |OWN      |B25003 |${002\over001}x100$                             |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Single-parent households with children <18y, %                         |SNGPNT   |B11012 |${\sum(010,015)\over 001}x100$                  |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Households without a motor vehicle, %                                  |NOVEH    |B25044 |${\sum(010,003)\over 001}x100$                  |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Households without internet, %                                         |NOINT    |B28002 |${013\over001}x100$                             |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Occupied housing units without complete plumbing, %                    |NOPLUM   |B25049 |$-ln({\sum(004,007)+1\over001+1}x100)$          |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+|Households with more than 1 person per room, %                         |CROWD    |B25014 |${\sum(005-007,011-013)\over 001}x100$          |
++-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
+*<sup>$^a$ Income disparity in 2022 was defined as the log of 100×ratio of number of households with <\$20,000 income to number of households with ≥\$100,000 income.</sup>*
+  </div>
+</div>
+
+<strong><strong>2.</strong></strong> Resulting NAs are converted to 0 as any found after calculation would be due to both the numerator and denominator being 0 and so will be converted to 0 as there are no true NAs in the data.
+
+<strong><strong>3.</strong></strong> The 17 calculated variables are standardized via zscore.
+
+<strong><strong>4.</strong></strong> Population weights are calculated using census variable B01003_001 (Universe: Total population) by dividing the areas population from the total population represented in the data labelled as POPWT. This value is then transformed where the square root + 1 is applied to account for the vastly different distributions across geographies and large skews to make them more comparable to one another.  
+
+<strong><strong>5.</strong></strong> Factor analysis is applied (fa function from the stats package) where population weights are applied, a 1 factor solution requested, and the factor method used is the principal factor solution. All other options were default.
+
+> CBG
+
+<br>
+
+<div class = "row">
+<div class = "col-md-3">
+
+<div style="margin:16px 0">
+ <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1177"><h4 class="text-white">CBG Weights</h4></button></center>
+  <div id="code1177" class="collapse">
+  
+|Variable  |NAs |Weights|
+|:---------|:---|------:|
+|MEDFI     |0   |-0.280 |
+|INCDIS    |0   |0.145  |
+|BELPL     |631 |0.085  |
+|PL150     |502 |0.184  |
+|EDU9YR    |81  |0.065  |
+|HSDPNHIGH |81  |-0.135 |
+|EMPWC     |445 |-0.104 |
+|UNEMP     |424 |0.023  |
+|MEDHV     |0   |-0.033 |
+|MEDRNT    |0   |-0.066 |
+|MEDMORT   |0   |-0.049 |
+|OWN       |631 |0.005  |
+|SNGPNT    |631 |0.035  |
+|NOVEH     |631 |0.025  |
+|NOINT     |631 |0.059  |
+|NOPLUM    |0   |0.014  |
+|CROWD     |631 |0.026  |
+  </div>
+</div>
+</div>
+
+<div class = "col-md-1">
+</div>
+
+<div class = "col-md-6">
+The table describes the amount of NAs which resulted from the 17 variable calculations and which were subsequently converted to 0 and the weights resulting from factor analysis. The code produced several products, the zscore standardized 17 composite variables, a raw ReADI score which can be used to subset down to whichever geographical area is relevant for a user's purposed and then re-scaled from 0-100, and then a nationally representative ADI scaled from 0-100. The ReADI_2022_CBG_RawVars.RData file has the 17 variables prior to zscore them.
+</div>
+
+<div class = "col-md-2">
+</div>
+</div>
+
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1209">Show Code</button>
+  <div id="code1209" class="collapse">
+```{r, eval = F}
+load("ReADI_CBG_2022_Imp.RData")
+
+ReADI_CBG_2022 <- dplyr::mutate(ReADI_CBG_2022_Imp,
+    MEDFI = B19013_001,
+    INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
+    BELPL = B17017_002/B17017_001*100,
+    PL150 = (C17002_005 + C17002_004 + C17002_003 + C17002_002)/C17002_001*100,
+    EDU9YR = (B15003_002 + B15003_003 + B15003_004 + B15003_005 + B15003_006 + B15003_007 + B15003_008 + B15003_009 + B15003_010 + B15003_011 + B15003_012 + B15003_013 + B15003_014 + B15003_015 + B15003_016)/B15003_001*100,
+    HSDPNHIGH = (B15003_022 + B15003_023 + B15003_024 + B15003_025)/B15003_001*100,
+    EMPWC = (C24010_003 + C24010_027 + C24010_039 + C24010_063)/ C24010_001*100,
+    UNEMP = B23025_005/B23025_003*100,
+    MEDHV = B25077_001,
+    MEDRNT = B25064_001,
+    MEDMORT = B25088_002,
+    OWN = B25003_002/B25003_001*100,
+    SNGPNT = (B11012_010 + B11012_015)/B11012_001*100,
+    NOVEH = (B25044_010 + B25044_003)/B25044_001*100,
+    NOINT = B28002_013/B28002_001*100,
+    NOPLUM = log((B25049_007 + B25049_004 + 1)/(B25049_001 + 1)*100),
+    CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
+    POPWT = log(B01003_001)
+) %>%
+  select(GEOID, Block_Group, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT
+) %>%
+  select(
+    everything()
+  )
+
+# Replacing NA values resulting from 0 values back to 0. 
+colSums(is.na(ReADI_CBG_2022))
+ReADI_CBG_2022[is.na(ReADI_CBG_2022)] <- 0
+ReADI_2022_CBG_RawVars <- ReADI_CBG_2022
+save(ReADI_2022_CBG_RawVars, file = "ReADI_2022_CBG_RawVars.RData")
+
+ADI_short <- ReADI_CBG_2022[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
+rownames(ADI_short) <- ADI_short$GEOID
+ADI_short$GEOID <- NULL
+
+# zscore transform
+ADI_short <- as.data.frame(scale(ADI_short))
+
+# Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
+identical(rownames(ADI_short), ReADI_CBG_2022$GEOID)
+adi.fa <- fa(ADI_short, nfactors = 1, fm = "pa", weight = ReADI_CBG_2022$POPWT)
+
+# Loadings
+ReADI_2022_Loadings <- as.data.frame(loadings(adi.fa)[])
+colnames(ReADI_2022_Loadings) <- "CBG"
+ReADI_2022_Loadings$Vars <- rownames(ReADI_2022_Loadings)
+ReADI_2022_Loadings <- ReADI_2022_Loadings[,c(2,1)]
+save(ReADI_2022_Loadings, file = "ReADI_2022_Loadings.RData")
+
+# Weights
+ReADI_2022_Wt <- as.data.frame(adi.fa$weights)
+colnames(ReADI_2022_Wt) <- "CBG"
+ReADI_2022_Wt$Vars <- rownames(ReADI_2022_Wt)
+ReADI_2022_Wt <- ReADI_2022_Wt[,c(2,1)]
+save(ReADI_2022_Wt, file = "ReADI_2022_Wt.RData")
+
+# Pulling the raw scores as the raw SDI, producing the SDI on a scale of 0-100
+ADI <- as.data.frame(adi.fa$scores)
+colnames(ADI) <- c("ReADI_CBG_Raw")
+identical(rownames(ADI), ReADI_CBG_2022$GEOID)
+ADI$ReADI_CBG_NR <- xtile(ADI$ReADI_CBG_Raw, n = 100, wt = ReADI_CBG_2022$B01003_001)
+ADI$GEOID <- rownames(ADI)
+ReADI_CBG_2022 <- plyr::join(ReADI_CBG_2022, ADI, by = "GEOID")
+save(ReADI_CBG_2022, file = "ReADI_CBG_2022.RData")
+```
+  </div>
+</div>
+
+> CT
+
+<br>
+
+<div class = "row">
+<div class = "col-md-3">
+|Variable  |NAs |Weights|
+|:---------|:---|------:|
+|MEDFI     |0   |-0.308 |
+|INCDIS    |0   |0.171  |
+|BELPL     |255 |0.048  |
+|PL150     |198 |0.224  |
+|EDU9YR    |21  |0.059  |
+|HSDPNHIGH |21  |-0.091 |
+|EMPWC     |154 |-0.129 |
+|UNEMP     |153 |0.019  |
+|MEDHV     |0   |-0.020 |
+|MEDRNT    |0   |-0.036 |
+|MEDMORT   |0   |-0.002 |
+|OWN       |255 |0.045  |
+|SNGPNT    |255 |0.045  |
+|NOVEH     |255 |0.015  |
+|NOINT     |255 |0.057  |
+|NOPLUM    |0   |0.010  |
+|CROWD     |255 |0.018  |
+</div>
+
+<div class = "col-md-1">
+</div>
+
+<div class = "col-md-6">
+The table describes the amount of NAs which resulted from the 17 variable calculations and which were subsequently converted to 0 and the weights resulting from factor analysis. The code produced several products, the zscore standardized 17 composite variables, a raw ReADI score which can be used to subset down to whichever geographical area is relevant for a user's purposed and then re-scaled from 0-100, and then a nationally representative ADI scaled from 0-100. The ReADI_2022_CT_RawVars.RData file has the 17 variables prior to zscore them.
+</div>
+
+<div class = "col-md-2">
+</div>
+</div>
+
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1323">Show Code</button>
+  <div id="code1323" class="collapse">
+```{r, eval = F}
+load("ReADI_CT_2022_Imp.RData")
+
+ReADI_CT_2022 <- dplyr::mutate(ReADI_CT_2022_Imp,
+    MEDFI = B19013_001,
+    INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
+    BELPL = B17017_002/B17017_001*100,
+    PL150 = (C17002_005 + C17002_004 + C17002_003 + C17002_002)/C17002_001*100,
+    EDU9YR = (B15003_002 + B15003_003 + B15003_004 + B15003_005 + B15003_006 + B15003_007 + B15003_008 + B15003_009 + B15003_010 + B15003_011 + B15003_012 + B15003_013 + B15003_014 + B15003_015 + B15003_016)/B15003_001*100,
+    HSDPNHIGH = (B15003_022 + B15003_023 + B15003_024 + B15003_025)/B15003_001*100,
+    EMPWC = (C24010_003 + C24010_027 + C24010_039 + C24010_063)/ C24010_001*100,
+    UNEMP = B23025_005/B23025_003*100,
+    MEDHV = B25077_001,
+    MEDRNT = B25064_001,
+    MEDMORT = B25088_002,
+    OWN = B25003_002/B25003_001*100,
+    SNGPNT = (B11012_010 + B11012_015)/B11012_001*100,
+    NOVEH = (B25044_010 + B25044_003)/B25044_001*100,
+    NOINT = B28002_013/B28002_001*100,
+    NOPLUM = log((B25049_007 + B25049_004 + 1)/(B25049_001 + 1)*100),
+    CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
+    POPWT = log(B01003_001)
+) %>%
+  select(GEOID, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT
+) %>%
+  select(
+    everything()
+  )
+
+# Replacing NA values resulting from 0 values back to 0. 
+colSums(is.na(ReADI_CT_2022))
+ReADI_CT_2022[is.na(ReADI_CT_2022)] <- 0
+ReADI_2022_CT_RawVars <- ReADI_CT_2022
+save(ReADI_2022_CT_RawVars, file = "ReADI_2022_CT_RawVars.RData")
+
+ADI_short <- ReADI_CT_2022[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
+rownames(ADI_short) <- ADI_short$GEOID
+ADI_short$GEOID <- NULL
+
+# zscore transform
+ADI_short <- as.data.frame(scale(ADI_short))
+
+# Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
+load("ReADI_2022_Wt.RData")
+load("ReADI_2022_Loadings.RData")
+identical(rownames(ADI_short), ReADI_CT_2022$GEOID)
+adi.fa <- fa(ADI_short, nfactors = 1, fm = "pa", weight = ReADI_CT_2022$POPWT)
+
+# Loadings
+identical(colnames(adi.fa$residual),ReADI_2022_Loadings$Vars)
+ReADI_2022_Loadings$CT <- loadings(adi.fa)[,"PA1"]
+save(ReADI_2022_Loadings, file = "ReADI_2022_Loadings.RData")
+
+# Weights
+identical(colnames(adi.fa$residual),ReADI_2022_Wt$Vars)
+ReADI_2022_Wt$CT <- adi.fa$weights[,"PA1"]
+save(ReADI_2022_Wt, file = "ReADI_2022_Wt.RData")
+
+# Pulling the raw scores as the raw SDI, producing the SDI on a scale of 0-100
+ADI <- as.data.frame(adi.fa$scores)
+colnames(ADI) <- c("ReADI_CT_Raw")
+identical(rownames(ADI), ReADI_CT_2022$GEOID)
+ADI$ReADI_CT_NR <- xtile(ADI$ReADI_CT_Raw, n = 100, wt = ReADI_CT_2022$B01003_001)
+ADI$GEOID <- rownames(ADI)
+ReADI_CT_2022 <- plyr::join(ReADI_CT_2022, ADI, by = "GEOID")
+save(ReADI_CT_2022, file = "ReADI_CT_2022.RData")
+```
+  </div>
+</div>
+
+> C
+
+<br>
+
+<div class = "row">
+<div class = "col-md-3">
+|Variable  |NAs |Weights|
+|:---------|:---|------:|
+|MEDFI     |0   |-0.301 |
+|INCDIS    |0   |0.314  |
+|BELPL     |0   |-0.085 |
+|PL150     |0   |0.182  |
+|EDU9YR    |0   |0.055  |
+|HSDPNHIGH |0   |-0.069 |
+|EMPWC     |0   |-0.069 |
+|UNEMP     |0   |0.013  |
+|MEDHV     |0   |-0.079 |
+|MEDRNT    |0   |-0.055 |
+|MEDMORT   |0   |0.019  |
+|OWN       |0   |0.051  |
+|SNGPNT    |0   |0.055  |
+|NOVEH     |0   |-0.024 |
+|NOINT     |0   |0.094  |
+|NOPLUM    |0   |0.016  |
+|CROWD     |0   |0.044  |
+</div>
+
+<div class = "col-md-1">
+</div>
+
+<div class = "col-md-6">
+The table describes the amount of NAs which resulted from the 17 variable calculations and which were subsequently converted to 0 and the weights resulting from factor analysis. The code produced several products, the zscore standardized 17 composite variables, a raw ReADI score which can be used to subset down to whichever geographical area is relevant for a user's purposed and then re-scaled from 0-100, and then a nationally representative ADI scaled from 0-100. The ReADI_2022_C_RawVars.RData file has the 17 variables prior to zscore them.
+</div>
+
+<div class = "col-md-2">
+</div>
+</div>
+
+<div style="margin:16px 0">
+  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1488">Show Code</button>
+  <div id="code1488" class="collapse">
+```{r, eval = F}
+load("ReADI_C_2022_Imp.RData")
+
+ReADI_C_2022 <- dplyr::mutate(ReADI_C_2022_Imp,
+    MEDFI = B19013_001,
+    INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
+    BELPL = B17017_002/B17017_001*100,
+    PL150 = (C17002_005 + C17002_004 + C17002_003 + C17002_002)/C17002_001*100,
+    EDU9YR = (B15003_002 + B15003_003 + B15003_004 + B15003_005 + B15003_006 + B15003_007 + B15003_008 + B15003_009 + B15003_010 + B15003_011 + B15003_012 + B15003_013 + B15003_014 + B15003_015 + B15003_016)/B15003_001*100,
+    HSDPNHIGH = (B15003_022 + B15003_023 + B15003_024 + B15003_025)/B15003_001*100,
+    EMPWC = (C24010_003 + C24010_027 + C24010_039 + C24010_063)/ C24010_001*100,
+    UNEMP = B23025_005/B23025_003*100,
+    MEDHV = B25077_001,
+    MEDRNT = B25064_001,
+    MEDMORT = B25088_002,
+    OWN = B25003_002/B25003_001*100,
+    SNGPNT = (B11012_010 + B11012_015)/B11012_001*100,
+    NOVEH = (B25044_010 + B25044_003)/B25044_001*100,
+    NOINT = B28002_013/B28002_001*100,
+    NOPLUM = log((B25049_007 + B25049_004 + 1)/(B25049_001 + 1)*100),
+    CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
+    POPWT = log(B01003_001)
+) %>%
+  select(GEOID, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT, 
+) %>%
+  select(
+    everything()
+  )
+
+# Replacing NA values resulting from 0 values back to 0. 
+colSums(is.na(ReADI_C_2022))
+ReADI_2022_C_RawVars <- ReADI_C_2022
+save(ReADI_2022_C_RawVars, file = "ReADI_2022_C_RawVars.RData")
+
+ADI_short <- ReADI_C_2022[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
+rownames(ADI_short) <- ADI_short$GEOID
+ADI_short$GEOID <- NULL
+
+# zscore transform
+ADI_short <- as.data.frame(scale(ADI_short))
+
+# Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
+load("ReADI_2022_Wt.RData")
+load("ReADI_2022_Loadings.RData")
+identical(rownames(ADI_short), ReADI_C_2022$GEOID)
+adi.fa <- fa(ADI_short, nfactors = 1, fm = "pa", weight = ReADI_C_2022$POPWT)
+
+# Loadings
+identical(colnames(adi.fa$residual),ReADI_2022_Loadings$Vars)
+ReADI_2022_Loadings$C <- loadings(adi.fa)[,"PA1"]
+save(ReADI_2022_Loadings, file = "ReADI_2022_Loadings.RData")
+write.csv(ReADI_2022_Loadings, file = "ReADI_2022_Loadings.csv")
+
+# weights
+identical(colnames(adi.fa$residual),ReADI_2022_Wt$Vars)
+ReADI_2022_Wt$C <- adi.fa$weights[,"PA1"]
+save(ReADI_2022_Wt, file = "ReADI_2022_Wt.RData")
+write.csv(ReADI_2022_Wt, file = "ReADI_2022_Wt.csv")
+
+# Pulling the raw scores as the raw SDI, producing the SDI on a scale of 0-100
+ADI <- as.data.frame(adi.fa$scores)
+colnames(ADI) <- c("ReADI_C_Raw")
+identical(rownames(ADI), ReADI_C_2022$GEOID)
+ADI$ReADI_C_NR <- xtile(ADI$ReADI_C_Raw, n = 100, wt = ReADI_C_2022$B01003_001)
+ADI$GEOID <- rownames(ADI)
+ReADI_C_2022 <- plyr::join(ReADI_C_2022, ADI, by = "GEOID")
+save(ReADI_C_2022, file = "ReADI_C_2022.RData")
+```
+  </div>
+</div>
+
+<br><br>
