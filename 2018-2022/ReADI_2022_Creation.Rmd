@@ -636,7 +636,7 @@ table(NA_C_GEOs[1]) # 4 max
 
 We will perform a nearest neighbor imputation using type Queen contiguity. The median values of all border touching geographies will be used to replace NAs for the respective geographical levels within state. Imputation will happen iteratively until no further CBGs can be imputed. Among those which can't be imputed in this way we will then impute with the average of the upper level geography if appropriate.
 
-*** EXPLANATION ABOUT WARNINGS IN IMPUTATION CODE MEANING ***
+When running the spatial imputation function (impute.fun) you may see some warnings. These arise for geographic units that have no contiguous neighbors (e.g., islands, national parks, naval facilities) or whose neighbors all have missing values. In those cases the function correctly leaves their values as NA, and these units are handled explicitly in the subsequent step (by exclusion or by borrowing from a higher-level geography). These warnings are expected and do not indicate a problem with the imputation.
 
 <div style="margin:16px 0">
   <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code531">Imputation Function</button>
