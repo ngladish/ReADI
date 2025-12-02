@@ -5,15 +5,15 @@ date: "<center>`r format(Sys.time(), '%d %B, %Y')`</center>"
 output:
   html_document:
     includes:
-      after_body: "/Users/ngladish/Documents/General/HTML_Files/NG_footer.html"
-      in_header: "/Users/ngladish/Documents/General/HTML_Files/header.html"
+      after_body: "../template/NG_footer.html"
+      in_header: "../template/header.html"
     toc: true
     toc_depth: 2
     number_sections: true
     toc_float: 
       collapsed: true
       smooth_scroll: true
-    css: "/Users/ngladish/Documents/General/HTML_Files/bootstrap.css"
+    css: "../template/bootstrap.css"
     self_contained: true
 ---
 <br><br>
@@ -297,10 +297,6 @@ Counties, census tracts, and census block groups have varying population sizes r
   <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code294">Show Code</button>
   <div id="code294" class="collapse">
 
-```{r, eval = F}
-setwd("~/Desktop/SDVI/ADI/Analysis/ReADI_2022")
-```
-
 ```{r, results = F, message = F}
 library(tidyverse)
 library(censusapi)
@@ -314,6 +310,7 @@ options(tigris_use_cache = TRUE)
 library(tigris)
 library(spdep)
 library(statar)
+library(dbplyr)
 ```
 
 ```{r}
@@ -331,14 +328,20 @@ sessionInfo()
 
 In order to obtain the census API data you are required to obtain a census key from [here](https://api.census.gov/data/key_signup.html).
 
+Once you receive your key, you should install it in your R environment (so it is available as the `CENSUS_API_KEY` environment variable and **never** hard-coded in shared code).
+
 <div style="margin:16px 0">
   <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code339">Show Code</button>
   <div id="code339" class="collapse">
   
 ```{r, eval = F}
-Sys.getenv("CENSUS_KEY") # to check that the API key is in the system
-states_removed <- c("60", "66", "69", "74", "78") # These are the state numbers which won't be included
-states <- setdiff(unique(fips_codes$state_code), states_removed)
+if (identical(Sys.getenv("CENSUS_API_KEY") != "", F)) {
+  stop(
+    "Census API key not found.\n",
+    "Please set the CENSUS_API_KEY environment variable before running this document.\n"
+  )
+}
+states <- setdiff(unique(fips_codes$state_code), c("60", "66", "69", "74", "78")) # Removing US territories
 ```
   </div>
 </div>
@@ -412,8 +415,8 @@ ACS_CT <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
 })))
 
 ACS_CT <- dcast(ACS_CT, GEOID + NAME ~ variable, value.var=c("estimate"))
-ReADI_CBG_2022_CT_Raw <- ACS_CT %>% separate(NAME, c("Tract", "County", "State"), sep = ";") # 85396
-save(ReADI_CBG_2022_CT_Raw, file = "ReADI_CBG_2022_CT_Raw.RData")
+ReADI_2022_CT_Raw <- ACS_CT %>% separate(NAME, c("Tract", "County", "State"), sep = ";") # 85396
+save(ReADI_2022_CT_Raw, file = "ReADI_2022_CT_Raw.RData")
 
 # county level
 ACS_C <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
@@ -426,8 +429,8 @@ ACS_C <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
 })))
 
 ACS_C <- dcast(ACS_C, GEOID + NAME ~ variable, value.var=c("estimate"))
-ReADI_CBG_2022_C_Raw <- ACS_C %>% separate(NAME, c("County", "State"), sep = ",") # 3222
-save(ReADI_CBG_2022_C_Raw, file = "ReADI_CBG_2022_C_Raw.RData")
+ReADI_2022_C_Raw <- ACS_C %>% separate(NAME, c("County", "State"), sep = ",") # 3222
+save(ReADI_2022_C_Raw, file = "ReADI_2022_C_Raw.RData")
 ```
   </div>
 </div>
@@ -526,14 +529,14 @@ Unfortunately, the measures of group quarters, specifically tables B26001, B2610
   <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code494">Show Code</button>
   <div id="code494" class="collapse">
 ```{r, eval = F}
-ReADI_CBG_2022_CBG_Raw <- ReADI_CBG_2022_CBG_Raw[!ReADI_CBG_2022_CBG_Raw$B01003_001 == 0,] 
-save(ReADI_CBG_2022_CBG_Raw, file = "ReADI_CBG_2022_CBG_Raw.RData")
+ReADI_2022_CBG_Raw <- ReADI_2022_CBG_Raw[!ReADI_2022_CBG_Raw$B01003_001 == 0,] 
+save(ReADI_2022_CBG_Raw, file = "ReADI_2022_CBG_Raw.RData")
 
-ReADI_CBG_2022_CT_Raw <- ReADI_CBG_2022_CT_Raw[!ReADI_CBG_2022_CT_Raw$B01003_001 == 0,] 
-save(ReADI_CBG_2022_CT_Raw, file = "ReADI_CBG_2022_CT_Raw.RData")
+ReADI_2022_CT_Raw <- ReADI_2022_CT_Raw[!ReADI_2022_CT_Raw$B01003_001 == 0,] 
+save(ReADI_2022_CT_Raw, file = "ReADI_2022_CT_Raw.RData")
 
-ReADI_CBG_2022_C_Raw <- ReADI_CBG_2022_C_Raw[!ReADI_CBG_2022_C_Raw$B01003_001 == 0,] 
-save(ReADI_CBG_2022_C_Raw, file = "ReADI_CBG_2022_C_Raw.RData")
+ReADI_2022_C_Raw <- ReADI_2022_C_Raw[!ReADI_2022_C_Raw$B01003_001 == 0,] 
+save(ReADI_2022_C_Raw, file = "ReADI_2022_C_Raw.RData")
 ```
   </div>
 </div>
@@ -592,34 +595,34 @@ Of important note is of all of the measures which have missing information for a
   <div id="code498" class="collapse">
 ```{r, eval = F}
 # By Variables
-NA_Vars <- ReADI_CBG_2022_CBG_Raw[, colSums(is.na(ReADI_CBG_2022_CBG_Raw)) > 0]
+NA_Vars <- ReADI_2022_CBG_Raw[, colSums(is.na(ReADI_2022_CBG_Raw)) > 0]
 NA_Vars <- as.data.frame(colSums(is.na(NA_Vars))) 
 colnames(NA_Vars) <- "CBG_N"
 
-NA_Vars$Perc_NA_CBG <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,]/nrow(ReADI_CBG_2022_CBG_Raw))*100,2)})
-NA_Vars_CT <- ReADI_CBG_2022_CT_Raw[, colSums(is.na(ReADI_CBG_2022_CT_Raw)) > 0]
+NA_Vars$Perc_NA_CBG <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,]/nrow(ReADI_2022_CBG_Raw))*100,2)})
+NA_Vars_CT <- ReADI_2022_CT_Raw[, colSums(is.na(ReADI_2022_CT_Raw)) > 0]
 identical(colnames(NA_Vars_CT), rownames(NA_Vars))
 NA_Vars$CT_N <- colSums(is.na(NA_Vars_CT))
 
-NA_Vars$Perc_NA_CT <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,"CT_N"]/nrow(ReADI_CBG_2022_CT_Raw))*100,2)})
-NA_Vars_C <- ReADI_CBG_2022_C_Raw[, colSums(is.na(ReADI_CBG_2022_C_Raw)) > 0]
+NA_Vars$Perc_NA_CT <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,"CT_N"]/nrow(ReADI_2022_CT_Raw))*100,2)})
+NA_Vars_C <- ReADI_2022_C_Raw[, colSums(is.na(ReADI_2022_C_Raw)) > 0]
 identical(colnames(NA_Vars_C), rownames(NA_Vars))
 NA_Vars$C_N <- colSums(is.na(NA_Vars_C))
-NA_Vars$Perc_NA_C <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,"C_N"]/nrow(ReADI_CBG_2022_C_Raw))*100,2)})
+NA_Vars$Perc_NA_C <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,"C_N"]/nrow(ReADI_2022_C_Raw))*100,2)})
 
 # 
-CountiesMissing <- ReADI_CBG_2022_C_Raw[rowSums(is.na(ReADI_CBG_2022_C_Raw)) > 0,]
+CountiesMissing <- ReADI_2022_C_Raw[rowSums(is.na(ReADI_2022_C_Raw)) > 0,]
 
 # By Geo Area
-NA_CBG_GEOs <- ReADI_CBG_2022_CBG_Raw[rowSums(is.na(ReADI_CBG_2022_CBG_Raw)) > 0,]
+NA_CBG_GEOs <- ReADI_2022_CBG_Raw[rowSums(is.na(ReADI_2022_CBG_Raw)) > 0,]
 NA_CBG_GEOs <- as.data.frame(rowSums(is.na(NA_CBG_GEOs))) 
 table(NA_CBG_GEOs[1]) # 4 max
 
-NA_CT_GEOs <- ReADI_CBG_2022_CT_Raw[rowSums(is.na(ReADI_CBG_2022_CT_Raw)) > 0,]
+NA_CT_GEOs <- ReADI_2022_CT_Raw[rowSums(is.na(ReADI_2022_CT_Raw)) > 0,]
 NA_CT_GEOs <- as.data.frame(rowSums(is.na(NA_CT_GEOs))) 
 table(NA_CT_GEOs[1]) # 4 max
 
-NA_C_GEOs <- ReADI_CBG_2022_C_Raw[rowSums(is.na(ReADI_CBG_2022_C_Raw)) > 0,]
+NA_C_GEOs <- ReADI_2022_C_Raw[rowSums(is.na(ReADI_2022_C_Raw)) > 0,]
 NA_C_GEOs <- as.data.frame(rowSums(is.na(NA_C_GEOs))) 
 table(NA_C_GEOs[1]) # 4 max
 ```
@@ -632,6 +635,8 @@ table(NA_C_GEOs[1]) # 4 max
 ***
 
 We will perform a nearest neighbor imputation using type Queen contiguity. The median values of all border touching geographies will be used to replace NAs for the respective geographical levels within state. Imputation will happen iteratively until no further CBGs can be imputed. Among those which can't be imputed in this way we will then impute with the average of the upper level geography if appropriate.
+
+*** EXPLANATION ABOUT WARNINGS IN IMPUTATION CODE MEANING ***
 
 <div style="margin:16px 0">
   <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code531">Imputation Function</button>
@@ -698,9 +703,9 @@ Imputation was successful in that only the NAs were imputed and replaced in the 
   <div id="code581" class="collapse">
 ```{r, eval = F}
 load("ACS_CBG_2022_Geometry.RData")
-load("ReADI_CBG_2022_CBG_Raw.RData")
+load("ReADI_2022_CBG_Raw.RData")
 
-B19013_Impute_CBG <- impute.fun(data = ReADI_CBG_2022_CBG_Raw, var = "B19013_001", shape = ACS_CBG_2022_Geometry) # Apparently there was 
+B19013_Impute_CBG <- impute.fun(data = ReADI_2022_CBG_Raw, var = "B19013_001", shape = ACS_CBG_2022_Geometry)
 head(B19013_Impute_CBG)
 cor.test(B19013_Impute_CBG$estimate, B19013_Impute_CBG$raw.estimate) # should always be 1 as NAs are removed to ensure nothing changed to the non-missing data.
 cor.test(B19013_Impute_CBG$imputed, B19013_Impute_CBG$raw.estimate) 
@@ -708,21 +713,21 @@ B19013_Impute_CBG$geometry <- NULL
 B19013_Impute_CBG <- B19013_Impute_CBG[, c("GEOID", "estimate")]
 colnames(B19013_Impute_CBG) <- c("GEOID", "B19013_001")
 
-B25064_Impute_CBG <- impute.fun(data = ReADI_CBG_2022_CBG_Raw, var = "B25064_001", shape = ACS_CBG_2022_Geometry)
+B25064_Impute_CBG <- impute.fun(data = ReADI_2022_CBG_Raw, var = "B25064_001", shape = ACS_CBG_2022_Geometry)
 cor.test(B25064_Impute_CBG$estimate, B25064_Impute_CBG$raw.estimate)
 cor.test(B25064_Impute_CBG$imputed, B25064_Impute_CBG$raw.estimate) 
 B25064_Impute_CBG$geometry <- NULL
 B25064_Impute_CBG <- B25064_Impute_CBG[, c("GEOID", "estimate")]
 colnames(B25064_Impute_CBG) <- c("GEOID", "B25064_001")
 
-B25077_Impute_CBG <- impute.fun(data = ReADI_CBG_2022_CBG_Raw, var = "B25077_001", shape = ACS_CBG_2022_Geometry)
+B25077_Impute_CBG <- impute.fun(data = ReADI_2022_CBG_Raw, var = "B25077_001", shape = ACS_CBG_2022_Geometry)
 cor.test(B25077_Impute_CBG$estimate, B25077_Impute_CBG$raw.estimate)
 cor.test(B25077_Impute_CBG$imputed, B25077_Impute_CBG$raw.estimate) 
 B25077_Impute_CBG$geometry <- NULL
 B25077_Impute_CBG <- B25077_Impute_CBG[, c("GEOID", "estimate")]
 colnames(B25077_Impute_CBG) <- c("GEOID", "B25077_001")
 
-B25088_Impute_CBG <- impute.fun(data = ReADI_CBG_2022_CBG_Raw, var = "B25088_002", shape = ACS_CBG_2022_Geometry)
+B25088_Impute_CBG <- impute.fun(data = ReADI_2022_CBG_Raw, var = "B25088_002", shape = ACS_CBG_2022_Geometry)
 cor.test(B25088_Impute_CBG$estimate, B25088_Impute_CBG$raw.estimate)
 cor.test(B25088_Impute_CBG$imputed, B25088_Impute_CBG$raw.estimate) 
 B25088_Impute_CBG$geometry <- NULL
@@ -739,7 +744,7 @@ sum(is.na(CBG_2022_Imputed$B25064_001))
 sum(is.na(CBG_2022_Imputed$B25077_001)) 
 sum(is.na(CBG_2022_Imputed$B25088_002)) 
 
-ReADI_CBG_2022_Imp <- ReADI_CBG_2022_CBG_Raw[, !colnames(ReADI_CBG_2022_CBG_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
+ReADI_CBG_2022_Imp <- ReADI_2022_CBG_Raw[, !colnames(ReADI_2022_CBG_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
 ReADI_CBG_2022_Imp <- plyr::join(ReADI_CBG_2022_Imp, CBG_2022_Imputed, by = "GEOID")
 save(ReADI_CBG_2022_Imp, file = "ReADI_CBG_2022_Imp.RData")
 ```
@@ -767,30 +772,30 @@ save(ReADI_CBG_2022_Imp, file = "ReADI_CBG_2022_Imp.RData")
   <div id="code639" class="collapse">
 ```{r, eval = F}
 load("ACS_CT_2022_Geometry.RData")
-load("ReADI_CBG_2022_CT_Raw.RData")
+load("ReADI_2022_CT_Raw.RData")
 
-B19013_Impute_CT <- impute.fun(data = ReADI_CBG_2022_CT_Raw, var = "B19013_001", shape = ACS_CT_2022_Geometry)
+B19013_Impute_CT <- impute.fun(data = ReADI_2022_CT_Raw, var = "B19013_001", shape = ACS_CT_2022_Geometry)
 cor.test(B19013_Impute_CT$estimate, B19013_Impute_CT$raw.estimate) # should always be 1, as nas are removed, to ensure nothing changed to the non-missing data.
 cor.test(B19013_Impute_CT$imputed, B19013_Impute_CT$raw.estimate) 
 B19013_Impute_CT$geometry <- NULL
 B19013_Impute_CT <- B19013_Impute_CT[, c("GEOID", "estimate")]
 colnames(B19013_Impute_CT) <- c("GEOID", "B19013_001")
 
-B25064_Impute_CT <- impute.fun(data = ReADI_CBG_2022_CT_Raw, var = "B25064_001", shape = ACS_CT_2022_Geometry)
+B25064_Impute_CT <- impute.fun(data = ReADI_2022_CT_Raw, var = "B25064_001", shape = ACS_CT_2022_Geometry)
 cor.test(B25064_Impute_CT$estimate, B25064_Impute_CT$raw.estimate)
 cor.test(B25064_Impute_CT$imputed, B25064_Impute_CT$raw.estimate) 
 B25064_Impute_CT$geometry <- NULL
 B25064_Impute_CT <- B25064_Impute_CT[, c("GEOID", "estimate")]
 colnames(B25064_Impute_CT) <- c("GEOID", "B25064_001")
 
-B25077_Impute_CT <- impute.fun(data = ReADI_CBG_2022_CT_Raw, var = "B25077_001", shape = ACS_CT_2022_Geometry)
+B25077_Impute_CT <- impute.fun(data = ReADI_2022_CT_Raw, var = "B25077_001", shape = ACS_CT_2022_Geometry)
 cor.test(B25077_Impute_CT$estimate, B25077_Impute_CT$raw.estimate)
 cor.test(B25077_Impute_CT$imputed, B25077_Impute_CT$raw.estimate) 
 B25077_Impute_CT$geometry <- NULL
 B25077_Impute_CT <- B25077_Impute_CT[, c("GEOID", "estimate")]
 colnames(B25077_Impute_CT) <- c("GEOID", "B25077_001")
 
-B25088_Impute_CT <- impute.fun(data = ReADI_CBG_2022_CT_Raw, var = "B25088_002", shape = ACS_CT_2022_Geometry)
+B25088_Impute_CT <- impute.fun(data = ReADI_2022_CT_Raw, var = "B25088_002", shape = ACS_CT_2022_Geometry)
 cor.test(B25088_Impute_CT$estimate, B25088_Impute_CT$raw.estimate)
 cor.test(B25088_Impute_CT$imputed, B25088_Impute_CT$raw.estimate) 
 B25088_Impute_CT$geometry <- NULL
@@ -807,7 +812,7 @@ sum(is.na(CT_2022_Imputed$B25064_001))
 sum(is.na(CT_2022_Imputed$B25077_001)) 
 sum(is.na(CT_2022_Imputed$B25088_002)) 
 
-ReADI_CT_2022_Imp <- ReADI_CBG_2022_CT_Raw[, !colnames(ReADI_CBG_2022_CT_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
+ReADI_CT_2022_Imp <- ReADI_2022_CT_Raw[, !colnames(ReADI_2022_CT_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
 ReADI_CT_2022_Imp <- plyr::join(ReADI_CT_2022_Imp, CT_2022_Imputed, by = "GEOID")
 save(ReADI_CT_2022_Imp, file = "ReADI_CT_2022_Imp.RData")
 ```
@@ -835,12 +840,12 @@ save(ReADI_CT_2022_Imp, file = "ReADI_CT_2022_Imp.RData")
   <div id="code701" class="collapse">
 ```{r, eval = F}
 load("ACS_C_2022_Geometry.RData")
-load("ReADI_CBG_2022_C_Raw.RData")
+load("ReADI_2022_C_Raw.RData")
 
 ## For the code to work you need to remove state 11 (DC) as it has only one county and will trigger an error.
-table(ReADI_CBG_2022_C_Raw$State)
-data = ReADI_CBG_2022_C_Raw[!ReADI_CBG_2022_C_Raw$State == " District of Columbia",]
-geoid_rm <- ReADI_CBG_2022_C_Raw[ReADI_CBG_2022_C_Raw$State == " District of Columbia", "GEOID"]
+table(ReADI_2022_C_Raw$State)
+data = ReADI_2022_C_Raw[!ReADI_2022_C_Raw$State == " District of Columbia",]
+geoid_rm <- ReADI_2022_C_Raw[ReADI_2022_C_Raw$State == " District of Columbia", "GEOID"]
 shape = ACS_C_2022_Geometry[!ACS_C_2022_Geometry$GEOID %in% geoid_rm,]
 
 B19013_Impute_C <- impute.fun(data = data, var = "B19013_001", shape = shape)
@@ -881,15 +886,15 @@ sum(is.na(C_2022_Imputed$B25064_001))
 sum(is.na(C_2022_Imputed$B25077_001)) 
 sum(is.na(C_2022_Imputed$B25088_002)) 
 
-ReADI_C_2022_Imp <- ReADI_CBG_2022_C_Raw[, !colnames(ReADI_CBG_2022_C_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
+ReADI_C_2022_Imp <- ReADI_2022_C_Raw[, !colnames(ReADI_2022_C_Raw) %in% c("B19013_001", "B25064_001", "B25077_001", "B25088_002")]
 ReADI_C_2022_Imp <- plyr::join(ReADI_C_2022_Imp, C_2022_Imputed, by = "GEOID")
 
 # replacing District of Columbia data removed in previous line.
-identical(ReADI_CBG_2022_C_Raw$GEOID, ReADI_C_2022_Imp$GEOID)
-ReADI_C_2022_Imp$B19013_001 <- ifelse(is.na(ReADI_C_2022_Imp$B19013_001), ReADI_CBG_2022_C_Raw$B19013_001, ReADI_C_2022_Imp$B19013_001)
-ReADI_C_2022_Imp$B25064_001 <- ifelse(is.na(ReADI_C_2022_Imp$B25064_001), ReADI_CBG_2022_C_Raw$B25064_001, ReADI_C_2022_Imp$B25064_001)
-ReADI_C_2022_Imp$B25077_001 <- ifelse(is.na(ReADI_C_2022_Imp$B25077_001), ReADI_CBG_2022_C_Raw$B25077_001, ReADI_C_2022_Imp$B25077_001)
-ReADI_C_2022_Imp$B25088_002 <- ifelse(is.na(ReADI_C_2022_Imp$B25088_002), ReADI_CBG_2022_C_Raw$B25088_002, ReADI_C_2022_Imp$B25088_002)
+identical(ReADI_2022_C_Raw$GEOID, ReADI_C_2022_Imp$GEOID)
+ReADI_C_2022_Imp$B19013_001 <- ifelse(is.na(ReADI_C_2022_Imp$B19013_001), ReADI_2022_C_Raw$B19013_001, ReADI_C_2022_Imp$B19013_001)
+ReADI_C_2022_Imp$B25064_001 <- ifelse(is.na(ReADI_C_2022_Imp$B25064_001), ReADI_2022_C_Raw$B25064_001, ReADI_C_2022_Imp$B25064_001)
+ReADI_C_2022_Imp$B25077_001 <- ifelse(is.na(ReADI_C_2022_Imp$B25077_001), ReADI_2022_C_Raw$B25077_001, ReADI_C_2022_Imp$B25077_001)
+ReADI_C_2022_Imp$B25088_002 <- ifelse(is.na(ReADI_C_2022_Imp$B25088_002), ReADI_2022_C_Raw$B25088_002, ReADI_C_2022_Imp$B25088_002)
 save(ReADI_C_2022_Imp, file = "ReADI_C_2022_Imp.RData")
 ```
   </div>
@@ -902,11 +907,18 @@ save(ReADI_C_2022_Imp, file = "ReADI_C_2022_Imp.RData")
 
 <br>
 
-The main reason why there would still be missing information after imputation is due to the imputation method used which required measures due to bordering geographies which would not impute areas which have no bordering areas such as islands. We will investigate what areas are remaining and if it makes sense to impute for these regions.
+After the primary spatial imputation step, a small number of geographic units still had missing values. These lingering NAs occurred almost entirely in areas that either (1) have no bordering geographies to borrow information from (e.g., isolated tracts/CBGs, islands), or (2) are special-use areas such as national parks or naval facilities with very small or atypically enumerated populations. To address this, we applied a hierarchical, geography-specific approach: when appropriate, we removed these non-residential or special-use areas from the dataset; in all other cases, we imputed remaining values by borrowing from the next-highest level of aggregation.
 
-> Census Tracts
+### Counties
+***
 
-Of the missing data remaining after imputation there are 9 total census tracts, 8 of which are NAs for all measures. Information based on [Census Reporter](https://censusreporter.org/profiles/):
+No counties have missing values after imputation.
+
+
+### Census Tracts
+***
+
+Four census tracts remain as NAs after imputation. Information based on [Census Reporter](https://censusreporter.org/profiles/):
 
 <div style="margin:16px 0">
  <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855"><h4 class="text-white">CT NAs</h4></button></center>
@@ -920,8 +932,6 @@ Of the missing data remaining after imputation there are 9 total census tracts, 
 |26083980100|9801 |Keweenaw County, MI       |3         |Isle Royale Island is a National Park. |
   </div>
 </div>
-
-As all of the census tracts which have remaining NAs, they are either national parks whose population consist of rangers or a naval base these CTs will be removed.
 
 <div style="margin:16px 0">
   <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code787">Show Code</button>
@@ -943,10 +953,9 @@ save(ReADI_CT_2022_Imp, file = "ReADI_CT_2022_Imp.RData")
   </div>
 </div>
 
-> Census Block Groups
+> Removing CBGs located within remove CTs 
 
-Observing the specific census block groups which remain NAs after imputation summarized in the table below: 
-
+Thirty-two census block groups (CBGs) remain as NAs after imputation, of those seven were contained within the census tracts removed above. Information based on [Census Reporter](https://censusreporter.org/profiles/):
 
 <div style="margin:16px 0">
  <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855"><h4 class="text-white">CBG NAs</h4></button></center>
@@ -988,8 +997,6 @@ Observing the specific census block groups which remain NAs after imputation sum
   </div>
 </div>
 
-Of the CBGs which remain missing after imputation it is clear that the vast majority of them were not imputed due to simply not directly bordering any other CBGs. These will be given the values attributed to the CT they are a part of for imputation. There are a few which will be removed as indicated in the removed column above based on if they represent national parks containing small population of rangers and areas consisting fully of group quarters.
-
 <div style="margin:16px 0">
   <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code860">Show Code</button>
   <div id="code860" class="collapse">
@@ -1006,13 +1013,14 @@ CBG_Missing <- merge(CBG_Missing, B25088_002_NAs, all = T)
 CBG_Missing <- unique(CBG_Missing)
 CBG_rm <- c("060839801001", "061119800001", "120879801001", "260839801001", "360050001001", "360610240002", "530350927043")
 ReADI_CBG_2022_Imp <- ReADI_CBG_2022_Imp[!ReADI_CBG_2022_Imp$GEOID %in% CBG_rm, ] # 240165 remaining - 7 removed
+save(ReADI_CBG_2022_Imp, file = "ReADI_CBG_2022_Imp.RData")
 ```
   </div>
 </div>
   
 <br><br>
 
-### Imputing Remaining CBGs
+### CBGs
 ***
 
 The remaining CBGs will be imputed with the CT measure they are located in resulting in the final results:
@@ -1035,6 +1043,7 @@ The remaining CBGs will be imputed with the CT measure they are located in resul
   <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1019">Show Code</button>
   <div id="code1019" class="collapse">
 ```{r, eval = F}
+load("ReADI_CBG_2022_Imp.RData")
 impute_CBG_geo <- CBG_Missing[!CBG_Missing$GEOID %in% CBG_rm, "GEOID"]
 impute_CT_geo <- sapply(length(impute_CBG_geo), function(x){
   substring(impute_CBG_geo, 1, 11)
@@ -1238,10 +1247,7 @@ ReADI_CBG_2022 <- dplyr::mutate(ReADI_CBG_2022_Imp,
     POPWT = log(B01003_001)
 ) %>%
   select(GEOID, Block_Group, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT
-) %>%
-  select(
-    everything()
-  )
+)
 
 # Replacing NA values resulting from 0 values back to 0. 
 colSums(is.na(ReADI_CBG_2022))
@@ -1352,10 +1358,7 @@ ReADI_CT_2022 <- dplyr::mutate(ReADI_CT_2022_Imp,
     POPWT = log(B01003_001)
 ) %>%
   select(GEOID, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT
-) %>%
-  select(
-    everything()
-  )
+)
 
 # Replacing NA values resulting from 0 values back to 0. 
 colSums(is.na(ReADI_CT_2022))
@@ -1463,10 +1466,7 @@ ReADI_C_2022 <- dplyr::mutate(ReADI_C_2022_Imp,
     POPWT = log(B01003_001)
 ) %>%
   select(GEOID, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT, 
-) %>%
-  select(
-    everything()
-  )
+)
 
 # Replacing NA values resulting from 0 values back to 0. 
 colSums(is.na(ReADI_C_2022))
