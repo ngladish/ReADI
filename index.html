@@ -3435,11 +3435,12 @@ ACS_CBG &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
     year = 2022,
     geography = &quot;block group&quot;,
     state = states[x],
-    key = Sys.getenv(&quot;CENSUS_KEY&quot;),
+    key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = ADI_Vars)
 })))
 ACS_CBG &lt;- dcast(ACS_CBG, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
 ReADI_2022_CBG_Raw &lt;- ACS_CBG %&gt;% separate(NAME, c(&quot;Block_Group&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;), sep = &quot;;&quot;) # 242336
+# ReADI_2022_CBG_Raw &lt;- ReADI_2022_CBG_Raw[!ReADI_2022_CBG_Raw$B01003_001 == 0,] # remove blocks with population = 0
 save(ReADI_2022_CBG_Raw, file = &quot;ReADI_2022_CBG_Raw.RData&quot;)
 
 # census tract level
@@ -3448,12 +3449,13 @@ ACS_CT &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
     year = 2022,
     geography = &quot;tract&quot;,
     state = states[x],
-    key = Sys.getenv(&quot;CENSUS_KEY&quot;),
+    key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = ADI_Vars)
 })))
 
 ACS_CT &lt;- dcast(ACS_CT, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
 ReADI_2022_CT_Raw &lt;- ACS_CT %&gt;% separate(NAME, c(&quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;), sep = &quot;;&quot;) # 85396
+# ReADI_2022_CT_Raw &lt;- ReADI_2022_CT_Raw[!ReADI_2022_CT_Raw$B01003_001 == 0,] # remove tracts with population = 0
 save(ReADI_2022_CT_Raw, file = &quot;ReADI_2022_CT_Raw.RData&quot;)
 
 # county level
@@ -3462,12 +3464,13 @@ ACS_C &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
     year = 2022,
     geography = &quot;county&quot;,
     state = states[x],
-    key = Sys.getenv(&quot;CENSUS_KEY&quot;),
+    key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = ADI_Vars)
 })))
 
 ACS_C &lt;- dcast(ACS_C, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
 ReADI_2022_C_Raw &lt;- ACS_C %&gt;% separate(NAME, c(&quot;County&quot;, &quot;State&quot;), sep = &quot;,&quot;) # 3222
+# ReADI_CBG_2022_C_Raw &lt;- ReADI_CBG_2022_C_Raw[!ReADI_CBG_2022_C_Raw$B01003_001 == 0,] # remove counties with population = 0
 save(ReADI_2022_C_Raw, file = &quot;ReADI_2022_C_Raw.RData&quot;)</code></pre>
 </div>
 </div>
@@ -3489,7 +3492,7 @@ Code</button>
     geography = &quot;block group&quot;,
     geometry = TRUE,
     state = states[x],
-    key = Sys.getenv(&quot;CENSUS_KEY&quot;),
+    key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = &quot;B01003_001&quot;)
 }))
 CBG_Geo &lt;- CBG_Geo[!CBG_Geo$estimate == 0,] # from 242336 to 240172
@@ -3502,7 +3505,7 @@ CT_Geo &lt;- do.call(rbind, lapply(1:length(states), function(x){
     geography = &quot;tract&quot;,
     geometry = TRUE,
     state = states[x],
-    key = Sys.getenv(&quot;CENSUS_KEY&quot;),
+    key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = &quot;B01003_001&quot;)
 }))
 CT_Geo &lt;- CT_Geo[!CT_Geo$estimate == 0,] # 85396 to 84539
@@ -3515,7 +3518,7 @@ C_Geo &lt;- do.call(rbind, lapply(1:length(states), function(x){
     geography = &quot;county&quot;,
     geometry = TRUE,
     state = states[x],
-    key = Sys.getenv(&quot;CENSUS_KEY&quot;),
+    key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = &quot;B01003_001&quot;)
 }))
 C_Geo &lt;- C_Geo[!C_Geo$estimate == 0,] #3222 as none had 0
@@ -5040,7 +5043,8 @@ Code</button>
 <div id="code1209" class="collapse">
 <pre class="r"><code>load(&quot;ReADI_CBG_2022_Imp.RData&quot;)
 
-ReADI_CBG_2022 &lt;- dplyr::mutate(ReADI_CBG_2022_Imp,
+ReADI_CBG_2022 &lt;- ReADI_CBG_2022_Imp %&gt;%
+  dplyr::mutate(ReADI_CBG_2022_Imp,
     MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
     BELPL = B17017_002/B17017_001*100,
@@ -5231,7 +5235,8 @@ Code</button>
 <div id="code1323" class="collapse">
 <pre class="r"><code>load(&quot;ReADI_CT_2022_Imp.RData&quot;)
 
-ReADI_CT_2022 &lt;- dplyr::mutate(ReADI_CT_2022_Imp,
+ReADI_CT_2022 &lt;- ReADI_CT_2022_Imp %&gt;%
+  dplyr::mutate(ReADI_CT_2022_Imp,
     MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
     BELPL = B17017_002/B17017_001*100,
@@ -5420,7 +5425,8 @@ Code</button>
 <div id="code1488" class="collapse">
 <pre class="r"><code>load(&quot;ReADI_C_2022_Imp.RData&quot;)
 
-ReADI_C_2022 &lt;- dplyr::mutate(ReADI_C_2022_Imp,
+ReADI_C_2022 &lt;- ReADI_C_2022_Imp %&gt;%
+  dplyr::mutate(ReADI_C_2022_Imp,
     MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
     BELPL = B17017_002/B17017_001*100,
