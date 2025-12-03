@@ -402,7 +402,6 @@ ACS_CBG <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
 })))
 ACS_CBG <- dcast(ACS_CBG, GEOID + NAME ~ variable, value.var=c("estimate"))
 ReADI_2022_CBG_Raw <- ACS_CBG %>% separate(NAME, c("Block_Group", "Tract", "County", "State"), sep = ";") # 242336
-# ReADI_2022_CBG_Raw <- ReADI_2022_CBG_Raw[!ReADI_2022_CBG_Raw$B01003_001 == 0,] # remove blocks with population = 0
 save(ReADI_2022_CBG_Raw, file = "ReADI_2022_CBG_Raw.RData")
 
 # census tract level
@@ -417,7 +416,6 @@ ACS_CT <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
 
 ACS_CT <- dcast(ACS_CT, GEOID + NAME ~ variable, value.var=c("estimate"))
 ReADI_2022_CT_Raw <- ACS_CT %>% separate(NAME, c("Tract", "County", "State"), sep = ";") # 85396
-# ReADI_2022_CT_Raw <- ReADI_2022_CT_Raw[!ReADI_2022_CT_Raw$B01003_001 == 0,] # remove tracts with population = 0
 save(ReADI_2022_CT_Raw, file = "ReADI_2022_CT_Raw.RData")
 
 # county level
@@ -432,7 +430,6 @@ ACS_C <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
 
 ACS_C <- dcast(ACS_C, GEOID + NAME ~ variable, value.var=c("estimate"))
 ReADI_2022_C_Raw <- ACS_C %>% separate(NAME, c("County", "State"), sep = ",") # 3222
-# ReADI_CBG_2022_C_Raw <- ReADI_CBG_2022_C_Raw[!ReADI_CBG_2022_C_Raw$B01003_001 == 0,] # remove counties with population = 0
 save(ReADI_2022_C_Raw, file = "ReADI_2022_C_Raw.RData")
 ```
   </div>
