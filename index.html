@@ -2777,7 +2777,7 @@ Reproducible Area Deprivation Index (ReADI | 2022)<br />
 PhD</a><br />
 </center></h4>
 <h4 class="date"><center><br />
-02 December, 2025<br />
+07 December, 2025<br />
 </center></h4>
 
 </div>
@@ -3143,12 +3143,13 @@ Standardization</h3>
 Problem
 </h4>
 <p>Our group, in parallel with other groups, discovered that the NA-ADI
-was not correctly calculated. Singh determined the
-coefficients/weights/loadings that Kind et al. use in their measures by
-performing factor analysis on the set of 17 variables in order to
-construct the ADI measure. Factor analysis requires all input data be on
-the same scale which is done automatically in most functions across
-programming software which seems to be the case here based on <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">2014
+was not correctly calculated <a href="https://academic.oup.com/healthaffairsscholar/article/1/5/qxad063/7342005">Petterson
+2023</a>. Singh determined the coefficients/weights/loadings that Kind
+et al. use in their measures by performing factor analysis on the set of
+17 variables in order to construct the ADI measure. Factor analysis
+requires all input data be on the same scale which is done automatically
+in most functions across programming software which seems to be the case
+here based on <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">2014
 Kind et al.</a> stating that they used the <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">2003
 Singh</a> methods which cites the SAS/STAT v8.1 FACTOR procedure which
 itself utilizes PROC FACTOR. The earliest version of a SAS/STAT user
@@ -3440,7 +3441,6 @@ ACS_CBG &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
 })))
 ACS_CBG &lt;- dcast(ACS_CBG, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
 ReADI_2022_CBG_Raw &lt;- ACS_CBG %&gt;% separate(NAME, c(&quot;Block_Group&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;), sep = &quot;;&quot;) # 242336
-# ReADI_2022_CBG_Raw &lt;- ReADI_2022_CBG_Raw[!ReADI_2022_CBG_Raw$B01003_001 == 0,] # remove blocks with population = 0
 save(ReADI_2022_CBG_Raw, file = &quot;ReADI_2022_CBG_Raw.RData&quot;)
 
 # census tract level
@@ -3455,7 +3455,6 @@ ACS_CT &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
 
 ACS_CT &lt;- dcast(ACS_CT, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
 ReADI_2022_CT_Raw &lt;- ACS_CT %&gt;% separate(NAME, c(&quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;), sep = &quot;;&quot;) # 85396
-# ReADI_2022_CT_Raw &lt;- ReADI_2022_CT_Raw[!ReADI_2022_CT_Raw$B01003_001 == 0,] # remove tracts with population = 0
 save(ReADI_2022_CT_Raw, file = &quot;ReADI_2022_CT_Raw.RData&quot;)
 
 # county level
@@ -3470,7 +3469,6 @@ ACS_C &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
 
 ACS_C &lt;- dcast(ACS_C, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
 ReADI_2022_C_Raw &lt;- ACS_C %&gt;% separate(NAME, c(&quot;County&quot;, &quot;State&quot;), sep = &quot;,&quot;) # 3222
-# ReADI_CBG_2022_C_Raw &lt;- ReADI_CBG_2022_C_Raw[!ReADI_CBG_2022_C_Raw$B01003_001 == 0,] # remove counties with population = 0
 save(ReADI_2022_C_Raw, file = &quot;ReADI_2022_C_Raw.RData&quot;)</code></pre>
 </div>
 </div>
@@ -5102,7 +5100,7 @@ save(ReADI_2022_Wt, file = &quot;ReADI_2022_Wt.RData&quot;)
 ADI &lt;- as.data.frame(adi.fa$scores)
 colnames(ADI) &lt;- c(&quot;ReADI_CBG_Raw&quot;)
 identical(rownames(ADI), ReADI_CBG_2022$GEOID)
-ADI$ReADI_CBG_NR &lt;- xtile(ADI$ReADI_CBG_Raw, n = 100, wt = ReADI_CBG_2022$B01003_001)
+ADI$ReADI_CBG_NR &lt;- round(percent_rank(ADI$ReADI_CBG_Raw)*100, 0)
 ADI$GEOID &lt;- rownames(ADI)
 ReADI_CBG_2022 &lt;- plyr::join(ReADI_CBG_2022, ADI, by = &quot;GEOID&quot;)
 save(ReADI_CBG_2022, file = &quot;ReADI_CBG_2022.RData&quot;)</code></pre>
@@ -5292,7 +5290,7 @@ save(ReADI_2022_Wt, file = &quot;ReADI_2022_Wt.RData&quot;)
 ADI &lt;- as.data.frame(adi.fa$scores)
 colnames(ADI) &lt;- c(&quot;ReADI_CT_Raw&quot;)
 identical(rownames(ADI), ReADI_CT_2022$GEOID)
-ADI$ReADI_CT_NR &lt;- xtile(ADI$ReADI_CT_Raw, n = 100, wt = ReADI_CT_2022$B01003_001)
+ADI$ReADI_CT_NR &lt;- round(percent_rank(ADI$ReADI_CT_Raw)*100, 0)
 ADI$GEOID &lt;- rownames(ADI)
 ReADI_CT_2022 &lt;- plyr::join(ReADI_CT_2022, ADI, by = &quot;GEOID&quot;)
 save(ReADI_CT_2022, file = &quot;ReADI_CT_2022.RData&quot;)</code></pre>
@@ -5483,7 +5481,7 @@ write.csv(ReADI_2022_Wt, file = &quot;ReADI_2022_Wt.csv&quot;)
 ADI &lt;- as.data.frame(adi.fa$scores)
 colnames(ADI) &lt;- c(&quot;ReADI_C_Raw&quot;)
 identical(rownames(ADI), ReADI_C_2022$GEOID)
-ADI$ReADI_C_NR &lt;- xtile(ADI$ReADI_C_Raw, n = 100, wt = ReADI_C_2022$B01003_001)
+ADI$ReADI_C_NR &lt;- round(percent_rank(ADI$ReADI_C_Raw)*100, 0)
 ADI$GEOID &lt;- rownames(ADI)
 ReADI_C_2022 &lt;- plyr::join(ReADI_C_2022, ADI, by = &quot;GEOID&quot;)
 save(ReADI_C_2022, file = &quot;ReADI_C_2022.RData&quot;)</code></pre>

@@ -5,15 +5,15 @@ date: "<center>`r format(Sys.time(), '%d %B, %Y')`</center>"
 output:
   html_document:
     includes:
-      after_body: "../template/NG_footer.html"
-      in_header: "../template/header.html"
+      after_body: "/Users/ngladish/Documents/General/HTML_Files/NG_footer.html"
+      in_header: "/Users/ngladish/Documents/General/HTML_Files/header.html"
     toc: true
     toc_depth: 2
     number_sections: true
     toc_float: 
       collapsed: true
       smooth_scroll: true
-    css: "../template/bootstrap.css"
+    css: "/Users/ngladish/Documents/General/HTML_Files/bootstrap.css"
     self_contained: true
 ---
 <br><br>
@@ -1285,7 +1285,7 @@ save(ReADI_2022_Wt, file = "ReADI_2022_Wt.RData")
 ADI <- as.data.frame(adi.fa$scores)
 colnames(ADI) <- c("ReADI_CBG_Raw")
 identical(rownames(ADI), ReADI_CBG_2022$GEOID)
-ADI$ReADI_CBG_NR <- xtile(ADI$ReADI_CBG_Raw, n = 100, wt = ReADI_CBG_2022$B01003_001)
+ADI$ReADI_CBG_NR <- round(percent_rank(ADI$ReADI_CBG_Raw)*100, 0)
 ADI$GEOID <- rownames(ADI)
 ReADI_CBG_2022 <- plyr::join(ReADI_CBG_2022, ADI, by = "GEOID")
 save(ReADI_CBG_2022, file = "ReADI_CBG_2022.RData")
@@ -1395,7 +1395,7 @@ save(ReADI_2022_Wt, file = "ReADI_2022_Wt.RData")
 ADI <- as.data.frame(adi.fa$scores)
 colnames(ADI) <- c("ReADI_CT_Raw")
 identical(rownames(ADI), ReADI_CT_2022$GEOID)
-ADI$ReADI_CT_NR <- xtile(ADI$ReADI_CT_Raw, n = 100, wt = ReADI_CT_2022$B01003_001)
+ADI$ReADI_CT_NR <- round(percent_rank(ADI$ReADI_CT_Raw)*100, 0)
 ADI$GEOID <- rownames(ADI)
 ReADI_CT_2022 <- plyr::join(ReADI_CT_2022, ADI, by = "GEOID")
 save(ReADI_CT_2022, file = "ReADI_CT_2022.RData")
@@ -1505,7 +1505,7 @@ write.csv(ReADI_2022_Wt, file = "ReADI_2022_Wt.csv")
 ADI <- as.data.frame(adi.fa$scores)
 colnames(ADI) <- c("ReADI_C_Raw")
 identical(rownames(ADI), ReADI_C_2022$GEOID)
-ADI$ReADI_C_NR <- xtile(ADI$ReADI_C_Raw, n = 100, wt = ReADI_C_2022$B01003_001)
+ADI$ReADI_C_NR <- round(percent_rank(ADI$ReADI_C_Raw)*100, 0)
 ADI$GEOID <- rownames(ADI)
 ReADI_C_2022 <- plyr::join(ReADI_C_2022, ADI, by = "GEOID")
 save(ReADI_C_2022, file = "ReADI_C_2022.RData")
