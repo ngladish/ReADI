@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the associated paper and repository."
+title: "Reproducible analysis for 'Estimation of Mortality via the Neighborhood Atlas and Reproducible Area Deprivation Indices'"
+type: software
+
+authors:
+  - family-names: Gladish
+    given-names: Nicole
+    affiliation: "Stanford University"
+  - family-names: Phillips
+    given-names: Robert L.
+    affiliation: "American Board of Family Medicine"
+  - family-names: Rehkopf
+    given-names: David H.
+    affiliation: "Stanford University"
+
+keywords:
+  - ReADI
+  - Area Deprivation Index
+  - Socioeconomic Position
+  - Social Determinants of Health
+  - Reproducible Research
+
+repository-code: "https://github.com/ngladish/Publications"
+url: "https://github.com/ngladish/Publications/tree/main/Gladish_2025_ReADI_Creation"
+license: "MIT"
+
+preferred-citation:
+  type: article
+  title: "Estimation of Mortality via the Neighborhood Atlas and Reproducible Area Deprivation Indices"
+  authors:
+    - family-names: Gladish
+      given-names: Nicole
+    - family-names: Phillips
+      given-names: Robert L.
+    - family-names: Rehkopf
+      given-names: David H.
+  journal: "JAMA Network Open"
+  year: 2025
+  # to be filled in once finalized:
+  # volume: "X"
+  # number: "Y"
+  # pages: "Z"
+  # doi: "10.xxxx/xxxxxxxxxx"
