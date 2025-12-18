@@ -2777,7 +2777,7 @@ Reproducible Area Deprivation Index (ReADI | 2022)<br />
 PhD</a><br />
 </center></h4>
 <h4 class="date"><center><br />
-07 December, 2025<br />
+17 December, 2025<br />
 </center></h4>
 
 </div>
@@ -2839,52 +2839,62 @@ color: white;
 <h1><span class="header-section-number">1</span> Introduction</h1>
 <hr />
 <p><br></p>
+<p>This document provides a fully reproducible workflow for creating the
+2022 Reproducible Area Deprivation Index (ReADI) for U.S. census block
+groups, tracts, and counties. ReADI is a corrected and updated
+implementation of the Area Deprivation Index that addresses several
+limitations of the existing Neighborhood Atlas ADI (NA-ADI), while
+preserving the core goal of summarizing socioeconomic deprivation across
+small areas.</p>
+<p>Broadly, this workflow:</p>
+<ol style="list-style-type: decimal">
+<li>Retrieves 2018–2022 5-year American Community Survey (ACS) data at
+county, tract, and block group levels.</li>
+<li>Cleans and harmonizes the ACS variables required to construct
+deprivation components.</li>
+<li>Imputes missing values using spatial information (neighboring areas)
+where appropriate.</li>
+<li>Constructs a set of standardized component variables that represent
+different dimensions of deprivation (income, education, employment,
+housing, etc.).</li>
+<li>Fits a one-factor, population-weighted factor model and uses the
+resulting factor scores as the basis for ReADI.</li>
+<li>Converts ReADI scores to a 0–100 national rank, with higher values
+indicating greater deprivation.</li>
+</ol>
+<p>The primary goal of this document is transparency and accountability:
+to make every step of ReADI construction visible to the field so that it
+can be scrutinized, improved, and iteratively refined into the most
+accurate and informative measure possible. In addition, the code is
+written so that users can, if they wish, rerun the full workflow to
+regenerate ReADI or adapt individual pieces of the code for their own
+analyses.</p>
 <div id="overview" class="section level2 tabset" number="1.1">
 <h2 class="tabset"><span class="header-section-number">1.1</span>
 Overview</h2>
 <hr />
-<p><a href="https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.93.7.1137">Singh
+<p>The original Area Deprivation Index (ADI) as described by Singh was
+designed to summarize multiple socioeconomic indicators into a single
+deprivation score at relatively small area levels. <a href="https://ajph.aphapublications.org/doi/pdf/10.2105/AJPH.93.7.1137">Singh
 (2003)</a> created the area deprivation index (ADI) which is a
 factor-based deprivation index comprised of 17 measures including
 poverty, education, housing and employment indicators drawn from US
 Census data to create a measure of socioeconomic context for a
 particular census-based region.</p>
-<p><a href="https://www.acpjournals.org/doi/10.7326/M13-2946">Kind et
-al. (2014)</a> then updated the ADI using 2000 census data. This group
-made the ADI accessible on the <a href="https://www.neighborhoodatlas.medicine.wisc.edu/">“Neighborhood
-Atlas” website</a> produced by <a href="https://www.nejm.org/doi/full/10.1056/NEJMp1802313">Kind et
-al. (2018)</a>. The ADI was made at the census block group level for the
-2015, 2020, and 2022 5-year ACS census data and can be downloaded at a
-nationally ranked level from 0-100 or state ranked level from 0-10. To
-get the other geographical levels a weighted average based on population
-size of the CBGs will used to produce the census tract score they are
-located in. The same will be done with the census tracts for the
-counties.</p>
-<blockquote>
-<p>Analysis Notes</p>
-</blockquote>
-<ul>
-<li><p>Singh justified the use of county level measures with the
-following quote: “Although census tracts are socioeconomically
-homogeneous geographic units with an average population of 4000, they
-are subject to change in every decennial census. Counties, on the other
-hand, not only are more stable sociopolitical and geographic entities,
-but also provide an appropriate socioeconomic, political, and community
-context within which many social and public health policies are
-formulated and implemented.”</p></li>
-<li><p>Issues with Kind version:</p>
-<ul>
-<li>Used 1990 weights on 2000 data</li>
-<li>Used weights calculated from census tract data on census block
-groups</li>
-<li>Did not update any thresholds such as income and education</li>
-<li>Shrinkage method applied later on in the versions is not explained
-clearly</li>
-</ul></li>
-</ul>
+<p>The <a href="https://www.neighborhoodatlas.medicine.wisc.edu/">Neighborhoood
+Atlas (NA-ADI)</a> <a href="https://www.nejm.org/doi/full/10.1056/NEJMp1802313">(Kind et
+al. 2018)</a> is a widely used operationalization of the ADI and has
+become the de facto standard deprivation index in many U.S. health
+studies. However, it has several practical limitations for ongoing
+analytic work, including fixed historical coefficients, lack of regular
+updating to contemporary ACS data, and limited transparency around how
+certain decisions were made (e.g., standardization, thresholds, and
+handling of missing data).</p>
+<p>The following subsections summarize the main conceptual issues with
+NA-ADI and how ReADI addresses each of them in practice.</p>
 <div id="singh-methods" class="section level3" number="1.1.1">
 <h3><span class="header-section-number">1.1.1</span> Singh Methods</h3>
-<br>
+<p><br></p>
 <h4>
 SINGH (2003)
 </h4>
@@ -2910,7 +2920,7 @@ higher levels of deprivation.</p>
 </div>
 <div id="kind-methods" class="section level3" number="1.1.2">
 <h3><span class="header-section-number">1.1.2</span> Kind Methods</h3>
-<br>
+<p><br></p>
 <h4>
 Version 1 (5/1/2018)
 </h4>
@@ -2929,7 +2939,7 @@ mean at 100 and standard deviation at 20.</p>
 neighborhoods with higher ADI scores have higher levels of deprivation.
 All coefficients are multiplied by -1 to ease interpretation (greater
 ADI means a greater disadvantage).</p>
-<br>
+<p><br></p>
 <h4>
 Version 2 (5/1/2019)
 </h4>
@@ -2939,7 +2949,7 @@ suppression of CBGs was based on those with &lt;100 people, fewer than
 30 housing units, or &gt;33% of the population living in group quarters
 based on <a href="https://www.sciencedirect.com/science/article/pii/S1047279701002216">Diez
 et al. (2001)</a>.</p>
-<br>
+<p><br></p>
 <h4>
 Version 3.0 (11/19/2020)
 </h4>
@@ -2954,7 +2964,7 @@ missing ACS items using a geographically-nested imputation methodology
 consistent with other area deprivation indices methodologies, including
 the English Indices of Multiple Deprivation (IMD) and the Scottish
 Indices of Multiple Deprivation (SIMD).</p>
-<br>
+<p><br></p>
 <h4>
 Version 3.1 (7/14/2021)
 </h4>
@@ -2963,7 +2973,7 @@ Version 3.1 (7/14/2021)
 to use Population, Housing and Group Quarters estimates from the ACS in
 place of the decennial Census. This adjusts the ADI of approximately 70
 block groups nationally.</p>
-<br>
+<p><br></p>
 <h4>
 Version 3.2 (9/16/2022)
 </h4>
@@ -2971,7 +2981,7 @@ Version 3.2 (9/16/2022)
 <p><strong><strong>1.</strong></strong> The No Phone variable was
 removed from the ADI and replaced with a No Household Internet variable
 to reflect the change in household phone and internet service.</p>
-<br>
+<p><br></p>
 <h4>
 Version 4.0.0 (7/10/2023)
 </h4>
@@ -2982,7 +2992,7 @@ year-to-year sampling variations in block group level component
 estimates within American Community Survey (ACS) data. This results in
 very little actual change in ADI ranking but buffers from known and
 future expected variation in ACS source data.</p>
-<br>
+<p><br></p>
 <h4>
 Version 4.0.1 (9/9/2023)
 </h4>
@@ -3002,12 +3012,12 @@ Block Groups, Nine Digit ZIP Code Centroids geography.</p>
 <blockquote>
 <p>Factor Analysis Results 1990 Census Data (Singh 2003)</p>
 </blockquote>
-<table style="width:98%;">
+<table>
 <colgroup>
-<col width="51%" />
-<col width="20%" />
-<col width="12%" />
-<col width="13%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -3122,19 +3132,24 @@ Block Groups, Nine Digit ZIP Code Centroids geography.</p>
 </tr>
 </tbody>
 </table>
-<p><em><sup><span class="math inline">\(^a\)</span> Income disparity in
-1990 was defined as the log of 100×ratio of number of households with
+<p><sup><span class="math inline">\(^a\)</span> Income disparity in 1990
+was defined as the log of 100×ratio of number of households with
 &lt;$10,000 income to number of households with ≥$50,000
-income.</sup></em></p>
+income.</sup></p>
 <p><br></p>
 </div>
 <div id="na-adi-issues" class="section level2 tabset" number="1.2">
 <h2 class="tabset"><span class="header-section-number">1.2</span> NA-ADI
 Issues</h2>
 <hr />
-<p>Several issues were discovered with the ADI created by <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">2014
-Kind et al.</a> and posted on the <a href="https://www.neighborhoodatlas.medicine.wisc.edu/">Neighbourhood
-Atlas</a> website that we aim to improve upon with the ReADI:</p>
+<p>Several limitations of the NA-ADI as implemented by <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">2014
+Kind et al.</a> and distributed via the <a href="https://www.neighborhoodatlas.medicine.wisc.edu/">Neighbourhood
+Atlas</a> have important implications for current analytic work. In the
+tabs below, we outline four key issues: standardization, use of
+historical versus concurrent coefficients, updating variable thresholds,
+and population size adjustment. We also describe how ReADI addresses
+each of them. This section is meant to make those decisions explicit and
+open to scrutiny so the index can be transp</p>
 <p><br></p>
 <div id="standardization" class="section level3" number="1.2.1">
 <h3><span class="header-section-number">1.2.1</span>
@@ -3142,64 +3157,91 @@ Standardization</h3>
 <h4>
 Problem
 </h4>
-<p>Our group, in parallel with other groups, discovered that the NA-ADI
-was not correctly calculated <a href="https://academic.oup.com/healthaffairsscholar/article/1/5/qxad063/7342005">Petterson
-2023</a>. Singh determined the coefficients/weights/loadings that Kind
-et al. use in their measures by performing factor analysis on the set of
-17 variables in order to construct the ADI measure. Factor analysis
-requires all input data be on the same scale which is done automatically
-in most functions across programming software which seems to be the case
-here based on <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">2014
-Kind et al.</a> stating that they used the <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">2003
-Singh</a> methods which cites the SAS/STAT v8.1 FACTOR procedure which
-itself utilizes PROC FACTOR. The earliest version of a SAS/STAT user
-guide we could find was <a href="https://support.sas.com/documentation/onlinedoc/91pdf/sasdoc_91/stat_ug_7313.pdf">version
-9.1</a> and based on this documentation it is still unclear whether
-z-standardization occurs automatically within the function. The newer <a href="https://documentation.sas.com/doc/en/statcdc/14.2/statug/statug_factor_syntax01.htm">documentation
-(v14.2)</a> does state online that the default is set to have your data
-standardized unless you specify otherwise but as code was not published
-with any manuscripts from either Singh nor Kind there is no way to
-determine definitively. There are some online <a href="https://communities.sas.com/t5/Statistical-Procedures/Question-related-to-standardization-in-PROC-FACTOR-Method/td-p/488717">forums</a>
-(see page 6 of <a href="https://www.sas.com/storefront/aux/en/spsxsfactor/61314_excerpt.pdf">this
-instruction manual</a>) which also suggest this default to be the case.
-Therefore, upon applying these coefficients/weights/loadings to new data
-one must first ensure all of the data is on the same scale. That this
-wasn’t properly done by Kind et al. was brought to light by groups such
-as <a href="https://www.healthaffairs.org/doi/10.1377/hlthaff.2022.01406?url_ver=Z39.88-2003&amp;rfr_id=ori%3Arid%3Acrossref.org&amp;rfr_dat=cr_pub++0pubmed">Hannan
-et al.; 2023</a> who found the ADI signal seemed to be driven by the
-median home value composite measure based on their findings being
-contradictory within New York State.</p>
+<p>The most consequential technical problem with the NA-ADI is the lack
+of appropriate standardization when applying <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">Singh’s</a>
+factor loadings to new ACS data. While this cannot be definitively
+confirmed because no code for the Neighborhood Atlas ADI has been
+published, <a href="https://academic.oup.com/healthaffairsscholar/article/1/5/qxad063/7342005">Petterson
+(2023)</a> was able to reverse engineer the index to an R² ≥ 0.999
+simply by standardizing the component variables before applying Singh’s
+published weights. This level of agreement strongly supports the
+conclusion that the missing standardization step is the main source of
+the discrepancy in the NA-ADI implementation. Factor analysis assumes
+variables are on a comparable scale, and standard practice in software
+such as SAS PROC FACTOR, Stata, and R is to standardize variables
+internally before estimating loadings. This is especially important here
+because the ADI components are on very different scales: most are
+proportions between 0 and 1, while four are dollar-valued medians with
+ranges from a few thousand to several hundred million dollars. Without
+standardization, variables with larger numeric ranges dominate the
+factor solution. Based on Singh’s description of using v8.1 SAS/STAT
+FACTOR and the <a href="https://documentation.sas.com/doc/en/statcdc/14.2/statug/statug_factor_syntax01.htm">documentation</a>
+for that procedure, it is highly likely that the original ADI loadings
+were estimated on standardized variables, with that step handled
+automatically by the software. In contrast, the NA-ADI implementation
+did not re-fit the factor model but instead took Singh’s published
+loadings and applied them directly to raw ACS variables. As those new
+variables were not first standardized in the same way as in the original
+factor analysis, the resulting index is mathematically inconsistent with
+the model that produced the loadings which resulted in an overemphasize
+of components such as median home value.</p>
 <h4>
 Solution
 </h4>
-<p>Here, we will simply standardize the data prior to applying the
-weights/loadings using the function scale in base R ensuring that the
-arguments center and scale are TRUE.</p>
+<p>In ReADI, we fit the factor model separately for each geography
+(county, tract, block group) and ACS period, rather than reusing
+historical loadings. The factor analysis is implemented in R (using
+psych::fa), which operates on the correlation matrix of the input
+variables and therefore centers and scales them internally. As a result,
+the component variables are placed on a common standardized scale as
+part of the model fitting, and we can directly use the resulting factor
+scores from that function as the raw ReADI values for that geography and
+year.</p>
 <p><br></p>
 </div>
-<div id="concurrent-coefficients" class="section level3" number="1.2.2">
-<h3><span class="header-section-number">1.2.2</span> Concurrent
-Coefficients</h3>
+<div id="concurrent-geographically-consistent-coefficients" class="section level3" number="1.2.2">
+<h3><span class="header-section-number">1.2.2</span> Concurrent &amp;
+Geographically Consistent Coefficients</h3>
 <h4>
 Problem
 </h4>
-<p><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">2014
-Kind et al.</a> cites in Table 1 that the coefficients/weights/loadings
-they used were identical to the 1990 coefficients/weights/loadings used
-by <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">Singh;
-2003</a>. This means that all iterations of this ADI version uses
-decades old weights which are likely inaccurate. Interestingly, <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">Singh;
-2003</a> when validating the temporal stability of the original ADI
-remade it using 1970 census data and in doing so re-calculated weights
-using that decades concurrent data as is depicted in Table 1 so there is
-no justification to use such outdated weights moving forward.</p>
+<p><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">Kind
+et al. (2014)</a> report in their Table 1 that the coefficients (factor
+loadings) used for the NA-ADI are identical to those published by <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">Singh
+(2003)</a> based on 1990 census data. This implies that all subsequent
+NA-ADI vintages reuse the same 1990-era weights, even when applied to
+much more recent ACS data. Given substantial changes in the
+socioeconomic distribution over time, it is unlikely that factor
+loadings estimated on 1990 data remain appropriate for contemporary
+indices. Notably, when Singh evaluated temporal stability, he
+reconstructed the ADI using 1970 census data and recomputed the factor
+loadings for that decade, rather than reusing the 1990 coefficients. In
+other words, Singh’s own validation work did not rely on a single fixed
+set of weights across time.</p>
+<p>In addition, the original ADI factor analysis was conducted at the
+census tract level, yet the <a href="https://www.neighborhoodatlas.medicine.wisc.edu/">Neighborhood
+Atlas</a> NA-ADI is distributed and promoted primarily at the census
+block group level. This means tract-level loadings are being applied to
+block group–level variables, which assumes that the factor structure is
+invariant across spatial scale. The Neighborhood Atlas documentation
+also discourages users from aggregating NA-ADI to higher levels such as
+tracts or counties, even though its own coefficients were derived at the
+tract level. Taken together, this raises concerns about both temporal
+and geographic inconsistency in the NA-ADI weights.</p>
 <h4>
 Solution
 </h4>
-<p>We will recalculate the weights for each new iterative year
-concurrent with the ReADI we will produce. This will be done by applying
-the function fa from the psych package in R using a one factor solution
-and pulling the weights variable.</p>
+<p>In ReADI, we re-estimate the factor model for each ACS period and for
+each geographic level (county, tract, and block group) using the
+corresponding contemporary data. For every combination of year and
+geography, we fit a one-factor model in R (using <em>psych::fa</em>)
+with the chosen set of component variables and population-based weights.
+The resulting loadings and factor scores are therefore concurrent with
+the data to which they are applied and are specific to the spatial scale
+at which the index is used. This avoids relying on decades-old,
+tract-derived coefficients for block group–level analyses and ensures
+that ReADI reflects current relationships between the component
+variables and deprivation within each geography.</p>
 <p><br></p>
 </div>
 <div id="updating-variable-thresholds" class="section level3" number="1.2.3">
@@ -3208,41 +3250,47 @@ Thresholds</h3>
 <h4>
 Problem
 </h4>
-<p><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">2014
-Kind et al.</a> lists in Appendix 1 the variables used for their
-Neighborhood Atlas ADI are identical to the 1990 variables used by <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">Singh;
-2003</a> listed in Table 1. This means that all variables and thresholds
-are the same as was relevant over 30 years ago which is inherently
-problematic. Specifically, using an education threshold of 9th grade and
-higher education of high school graduation is likely going to result in
-an underestimate of such individuals in 2024. Additionally, the
-thresholds used for income disparity is different from at least
-inflation alone. Finally, having a measure fo whether someone has a
-telephone or not is not technologically relevant in today’s time.
-Interestingly, <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">Singh;
-2003</a> when validating the temporal stability of the original ADI
-remade it using 1970 census data and in doing so re-defined at least the
-income disparity thresholds indicating the original intent was to
-modernize and make relevant the variables/thresholds as time went
-on.</p>
+<p><a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4251560/pdf/nihms619606.pdf">Kind
+et al. (2014)</a> list in their appendix the same variables and
+thresholds that <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1447923/pdf/0931137.pdf">Singh
+(2003)</a> used with 1990 census data. As a result, most NA-ADI vintages
+rely on variable definitions and cut points that reflect socioeconomic
+conditions more than 30 years old. This is problematic for several
+reasons. Education thresholds based on less than 9 years of schooling
+and “higher education” defined as high school graduation are likely to
+underestimate educational deprivation in 2022, when completing high
+school is far more common and a bachelor’s degree is often a more
+appropriate benchmark. The income disparity bands used in the original
+ADI also do not account for changes in the income distribution or
+inflation (for example, very low income defined as less than $10,000 and
+high income as at least $50,000). Although the Neighborhood Atlas team
+has more recently updated the “telephone” variable to reflect internet
+access, many of the other original thresholds have not been modernized.
+Importantly, when Singh evaluated temporal stability using 1970 census
+data, he redefined at least the income disparity thresholds, which
+suggests that the original intent was to update these definitions over
+time rather than freeze them permanently.</p>
 <h4>
 Solution
 </h4>
-<p>We will change the following variables to more modern and accurate
-versions:</p>
+<p>In ReADI, we update key variable definitions and thresholds to better
+reflect contemporary socioeconomic conditions while preserving the
+underlying constructs. Specifically:</p>
 <ul>
-<li>Percent of population aged &gt;= 25 years with &lt; 9 years of
-education to Percent of population aged &gt;= 25 years with &lt; a high
-school diploma</li>
-<li>Percent of population aged &gt;= 25 years with &lt; a high school
-diploma to Percent of population aged &gt;= 25 years with &lt; a
-bachelors degree</li>
-<li><span class="math inline">\(\text{Income Disparity} =
+<li><p>The original “percent of the population aged ≥ 25 years with less
+than 9 years of education” is replaced with “percent of the population
+aged ≥ 25 years with less than a high school diploma.”</p></li>
+<li><p>The original “percent of the population aged ≥ 25 years with less
+than a high school diploma” is replaced with “percent of the population
+aged ≥ 25 years with less than a bachelor’s degree.”</p></li>
+<li><p>The original income disparity measure</p>
+<p><span class="math inline">\(\text{Income Disparity} =
 log(100*{\text{Household Income &lt;\$10,000} \over \text{Household
-Income ≥\$50,000}})\)</span> to <span class="math inline">\(\text{Income
-Disparity} = log(100*{\text{Household Income &lt;\$20,000} \over
-\text{Household Income ≥\$100,000}})\)</span></li>
+Income ≥\$50,000}})\)</span> is updated to <span class="math inline">\(\text{Income Disparity} = log(100*{\text{Household
+Income &lt;\$20,000} \over \text{Household Income
+≥\$100,000}})\)</span></p></li>
 </ul>
+<p>which better reflects the current income distribution.</p>
 <p><br></p>
 </div>
 <div id="population-size-adjustment" class="section level3" number="1.2.4">
@@ -3251,20 +3299,23 @@ Adjustment</h3>
 <h4>
 Problem
 </h4>
-<p>Counties, census tracts, and census block groups have varying
-population sizes ranging from 1-4,000 for census tracts and block groups
-to 500-9,000,000 for counties. They also have very skewed distributions
-making comparisons between areas within geographies and between
-geographies difficult.</p>
+<p>Counties, census tracts, and census block groups have highly variable
+and skewed population sizes. Some units have only a handful of
+residents, while others contain thousands (and counties can range from a
+few hundred to several million people). Without accounting for these
+differences, small areas can contribute as much to the factor solution
+as large areas, which can make estimates unstable and distort
+comparisons both within and across geographic levels.</p>
 <h4>
 Solution
 </h4>
-<ul>
-<li>Calculate the log of the population and ensure a normal
-distribution.</li>
-<li>Within the factor analysis function add the transformed population
-measure as a weight.</li>
-</ul>
+<p>To account for this, we transform population size using the natural
+log of the total population and use this transformed measure as an
+analytic weight in the factor analysis. In practice, we compute a log
+population term (POPWT) and pass it as the <em>weight</em> argument to
+the factor analysis function. This gives more influence to more populous
+areas when estimating loadings and factor scores, while still producing
+ReADI values for each individual geographic unit.</p>
 <p><br></p>
 </div>
 </div>
@@ -3276,9 +3327,10 @@ measure as a weight.</li>
 <p>Libraries</p>
 </blockquote>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code294">Show
-Code</button>
-<div id="code294" class="collapse">
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code338">
+Show Code
+</button>
+<div id="code338" class="collapse">
 <pre class="r"><code>library(tidyverse)
 library(censusapi)
 library(reshape2) 
@@ -3319,23 +3371,23 @@ library(dbplyr)</code></pre>
 ## [21] tibble_3.2.1      ggplot2_4.0.0     tidyverse_2.0.0  
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] gtable_0.3.6       ellipse_0.5.0      xfun_0.52          bslib_0.9.0       
-##  [5] lattice_0.22-7     tzdb_0.5.0         vctrs_0.6.5        tools_4.5.0       
-##  [9] generics_0.1.4     parallel_4.5.0     proxy_0.4-27       pkgconfig_2.0.3   
-## [13] KernSmooth_2.23-26 data.table_1.17.4  RColorBrewer_1.1-3 S7_0.2.0          
-## [17] uuid_1.2-1         lifecycle_1.0.4    deldir_2.0-4       compiler_4.5.0    
-## [21] farver_2.1.2       mnormt_2.1.1       htmltools_0.5.8.1  class_7.3-23      
-## [25] sass_0.4.10        yaml_2.3.10        pillar_1.10.2      crayon_1.5.3      
-## [29] jquerylib_0.1.4    classInt_0.4-11    cachem_1.1.0       wk_0.9.4          
-## [33] boot_1.3-31        nlme_3.1-168       tidyselect_1.2.1   rvest_1.0.4       
-## [37] digest_0.6.37      stringi_1.8.7      fastmap_1.2.0      grid_4.5.0        
-## [41] cli_3.6.5          magrittr_2.0.3     dichromat_2.0-0.1  e1071_1.7-16      
-## [45] withr_3.0.2        scales_1.4.0       rappdirs_0.3.3     sp_2.2-0          
-## [49] timechange_0.3.0   rmarkdown_2.29     httr_1.4.7         cellranger_1.1.0  
-## [53] hms_1.1.3          evaluate_1.0.3     knitr_1.50         s2_1.1.9          
-## [57] rlang_1.1.6        Rcpp_1.0.14        glue_1.8.0         DBI_1.2.3         
-## [61] xml2_1.3.8         rstudioapi_0.17.1  jsonlite_2.0.0     R6_2.6.1          
-## [65] units_0.8-7</code></pre>
+##  [1] tidyselect_1.2.1   farver_2.1.2       S7_0.2.0           fastmap_1.2.0     
+##  [5] digest_0.6.37      timechange_0.3.0   lifecycle_1.0.4    magrittr_2.0.3    
+##  [9] compiler_4.5.0     rlang_1.1.6        sass_0.4.10        tools_4.5.0       
+## [13] yaml_2.3.10        corrplot_0.95      data.table_1.17.8  knitr_1.50        
+## [17] sp_2.2-0           classInt_0.4-11    mnormt_2.1.1       xml2_1.3.8        
+## [21] RColorBrewer_1.1-3 KernSmooth_2.23-26 withr_3.0.2        Metrics_0.1.4     
+## [25] grid_4.5.0         e1071_1.7-16       scales_1.4.0       dichromat_2.0-0.1 
+## [29] cli_3.6.5          ellipse_0.5.0      rmarkdown_2.29     crayon_1.5.3      
+## [33] generics_0.1.4     rstudioapi_0.17.1  httr_1.4.7         tzdb_0.5.0        
+## [37] DBI_1.2.3          cachem_1.1.0       proxy_0.4-27       rvest_1.0.4       
+## [41] parallel_4.5.0     s2_1.1.9           cellranger_1.1.0   MBESS_4.9.41      
+## [45] vctrs_0.6.5        boot_1.3-31        jsonlite_2.0.0     hms_1.1.3         
+## [49] jquerylib_0.1.4    units_0.8-7        glue_1.8.0         stringi_1.8.7     
+## [53] gtable_0.3.6       deldir_2.0-4       pillar_1.10.2      rappdirs_0.3.3    
+## [57] htmltools_0.5.8.1  R6_2.6.1           wk_0.9.4           evaluate_1.0.3    
+## [61] lattice_0.22-7     bslib_0.9.0        class_7.3-23       Rcpp_1.0.14       
+## [65] uuid_1.2-1         nlme_3.1-168       xfun_0.52          pkgconfig_2.0.3</code></pre>
 </div>
 </div>
 <p><br><br></p>
@@ -3343,41 +3395,26 @@ library(dbplyr)</code></pre>
 <h2><span class="header-section-number">2.1</span> Retrieving 2018-2022
 5-Year ACS</h2>
 <hr />
+<p><br></p>
 <blockquote>
-<p>Obtaining Census Key</p>
+<p>Pulling Variables Required</p>
 </blockquote>
-<p>In order to obtain the census API data you are required to obtain a
-census key from <a href="https://api.census.gov/data/key_signup.html">here</a>.</p>
-<p>Once you receive your key, you should install it in your R
-environment (so it is available as the <code>CENSUS_API_KEY</code>
-environment variable and <strong>never</strong> hard-coded in shared
-code).</p>
-<div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code339">Show
-Code</button>
-<div id="code339" class="collapse">
-<pre class="r"><code>if (identical(Sys.getenv(&quot;CENSUS_API_KEY&quot;) != &quot;&quot;, F)) {
-  stop(
-    &quot;Census API key not found.\n&quot;,
-    &quot;Please set the CENSUS_API_KEY environment variable before running this document.\n&quot;
-  )
-}
-states &lt;- setdiff(unique(fips_codes$state_code), c(&quot;60&quot;, &quot;66&quot;, &quot;69&quot;, &quot;74&quot;, &quot;78&quot;)) # Removing US territories</code></pre>
-</div>
-</div>
-<p><br><br></p>
-<div id="pulling-variables-required" class="section level3" number="2.1.1">
-<h3><span class="header-section-number">2.1.1</span> Pulling Variables
-Required</h3>
-<hr />
-<p>There are some areas which have no population or are located in water
-etc. These should be removed so they are not influencing the imputation
-of other regions. More information <a href="https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2020pl/TGRSHP2020PL_TechDoc_Ch4.pdf">here</a>.
-We are pulling data from three geographies: county, census tract, and
-census block group. Definitions on what these are can be found in this
-<a href="https://www2.census.gov/geo/pdfs/reference/GARM/Ch10GARM.pdf">census
-documentation</a>.</p>
-<p>Here is the breakdown of how many of each area exist:</p>
+<p><br></p>
+<p>In this section we obtain the ACS 2018–2022 5-year estimates for all
+variables used to construct ReADI. We work at three geographic levels:
+counties, census tracts, and census block groups. Definitions of these
+geographic units are provided in the <a href="https://www2.census.gov/geo/pdfs/reference/GARM/Ch10GARM.pdf">U.S.
+Census Bureau documentation</a>.</p>
+<p>Accessing ACS data via the Census API requires an API key, which can
+be requested from the <a href="https://api.census.gov/data/key_signup.html">Census Bureau</a>.
+Once you receive your key, install it in your R environment as the
+<em>CENSUS_API_KEY</em> environment variable (for example, by adding it
+to <em>~/.Renviron</em> or a project <em>.Renviron</em>) and do not
+hard-code the key directly in shared code.</p>
+<p>The code that follows pulls the required ACS variables for counties,
+census tracts, and census block groups using the Census API and saves
+them as R objects for use in later steps.</p>
+<p>Below are the final numbers of areas at each geography:</p>
 <div class="row">
 <div class="col-md-4">
 <table>
@@ -3408,10 +3445,19 @@ documentation</a>.</p>
 </div>
 </div>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code357">Show
-Code</button>
-<div id="code357" class="collapse">
-<pre class="r"><code>ADI_Vars &lt;- c(
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code397">
+Show Code
+</button>
+<div id="code397" class="collapse">
+<pre class="r"><code>if (!nzchar(Sys.getenv(&quot;CENSUS_API_KEY&quot;))) {
+  stop(
+    &quot;Census API key not found.\n&quot;,
+    &quot;Please set the CENSUS_API_KEY environment variable (e.g. in .Renviron) &quot;,
+    &quot;before running this document.\n&quot;)}
+
+states &lt;- setdiff(unique(fips_codes$state_code), c(&quot;60&quot;, &quot;66&quot;, &quot;69&quot;, &quot;74&quot;, &quot;78&quot;)) # Removing US territories
+
+ADI_Vars &lt;- c(
        &quot;B01003_001&quot;,
        &quot;B19013_001&quot;,
        &quot;B19001_002&quot;, &quot;B19001_003&quot;, &quot;B19001_004&quot;, &quot;B19001_014&quot;, &quot;B19001_015&quot;, &quot;B19001_016&quot;, &quot;B19001_017&quot;, 
@@ -3431,132 +3477,450 @@ Code</button>
        &quot;B25014_005&quot;, &quot;B25014_006&quot;, &quot;B25014_007&quot;, &quot;B25014_011&quot;, &quot;B25014_012&quot;, &quot;B25014_013&quot;, &quot;B25014_001&quot;)
   
 # CBG level
-ACS_CBG &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
-   ACS_CBG &lt;- get_acs(
+ACS_CBG &lt;- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2022,
     geography = &quot;block group&quot;,
-    state = states[x],
+    state = st,
     key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = ADI_Vars)
-})))
-ACS_CBG &lt;- dcast(ACS_CBG, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
-ReADI_2022_CBG_Raw &lt;- ACS_CBG %&gt;% separate(NAME, c(&quot;Block_Group&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;), sep = &quot;;&quot;) # 242336
-save(ReADI_2022_CBG_Raw, file = &quot;ReADI_2022_CBG_Raw.RData&quot;)
+}))</code></pre>
+<pre><code>## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS</code></pre>
+<pre class="r"><code>ACS_CBG &lt;- dcast(ACS_CBG, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
+ReADI_2022_CBG_Raw &lt;- ACS_CBG %&gt;% separate(NAME, c(&quot;Block_Group&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;), sep = &quot;;&quot;) 
 
 # census tract level
-ACS_CT &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
-   ACS_CT &lt;- get_acs(
+ACS_CT &lt;- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2022,
     geography = &quot;tract&quot;,
-    state = states[x],
+    state = st,
     key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = ADI_Vars)
-})))
-
-ACS_CT &lt;- dcast(ACS_CT, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
-ReADI_2022_CT_Raw &lt;- ACS_CT %&gt;% separate(NAME, c(&quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;), sep = &quot;;&quot;) # 85396
-save(ReADI_2022_CT_Raw, file = &quot;ReADI_2022_CT_Raw.RData&quot;)
+}))</code></pre>
+<pre><code>## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS</code></pre>
+<pre class="r"><code>ACS_CT &lt;- dcast(ACS_CT, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
+ReADI_2022_CT_Raw &lt;- ACS_CT %&gt;% separate(NAME, c(&quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;), sep = &quot;;&quot;) 
 
 # county level
-ACS_C &lt;- data.frame(do.call(rbind, lapply(1:length(states), function(x){
-   ACS_C &lt;- get_acs(
+ACS_C &lt;- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2022,
     geography = &quot;county&quot;,
-    state = states[x],
+    state = st,
     key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = ADI_Vars)
-})))
-
-ACS_C &lt;- dcast(ACS_C, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
-ReADI_2022_C_Raw &lt;- ACS_C %&gt;% separate(NAME, c(&quot;County&quot;, &quot;State&quot;), sep = &quot;,&quot;) # 3222
-save(ReADI_2022_C_Raw, file = &quot;ReADI_2022_C_Raw.RData&quot;)</code></pre>
+}))</code></pre>
+<pre><code>## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS</code></pre>
+<pre class="r"><code>ACS_C &lt;- dcast(ACS_C, GEOID + NAME ~ variable, value.var=c(&quot;estimate&quot;))
+ReADI_2022_C_Raw &lt;- ACS_C %&gt;% separate(NAME, c(&quot;County&quot;, &quot;State&quot;), sep = &quot;,&quot;) </code></pre>
 </div>
 </div>
 <p><br><br></p>
-</div>
-<div id="pulling-geography-measures" class="section level3" number="2.1.2">
-<h3><span class="header-section-number">2.1.2</span> Pulling Geography
-Measures</h3>
-<hr />
-<p>These values are required for both imputation and for visualizations
-involving mapping.</p>
+<blockquote>
+<p>Pulling Geography Measures</p>
+</blockquote>
+<p><br></p>
+<p>In addition to the ACS variables, we retrieve the corresponding
+spatial geometries for each geography (counties, census tracts, and
+census block groups). These geometry objects are required for both the
+spatial imputation procedures and for any visualizations that involve
+mapping ReADI values. The code in this section downloads and stores the
+geometry data that will be linked to the ACS variables in later
+steps.</p>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code434">Show
-Code</button>
-<div id="code434" class="collapse">
-<pre class="r"><code>CBG_Geo &lt;- do.call(rbind, lapply(1:length(states), function(x){
-   ADI_2020_CBG_Raw_NG &lt;- get_acs(
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code478">
+Show Code
+</button>
+<div id="code478" class="collapse">
+<pre class="r"><code>CBG_Geo &lt;- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2022,
     geography = &quot;block group&quot;,
     geometry = TRUE,
-    state = states[x],
+    state = st,
     key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = &quot;B01003_001&quot;)
-}))
-CBG_Geo &lt;- CBG_Geo[!CBG_Geo$estimate == 0,] # from 242336 to 240172
+}))</code></pre>
+<pre><code>## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS</code></pre>
+<pre class="r"><code>CBG_Geo &lt;- CBG_Geo[!CBG_Geo$estimate == 0,] 
 ACS_CBG_2022_Geometry &lt;- CBG_Geo[, c(&quot;GEOID&quot;, &quot;geometry&quot;)]
-save(ACS_CBG_2022_Geometry, file = &quot;ACS_CBG_2022_Geometry.RData&quot;)
 
-CT_Geo &lt;- do.call(rbind, lapply(1:length(states), function(x){
-   ADI_2020_CBG_Raw_NG &lt;- get_acs(
+CT_Geo &lt;- do.call(rbind, lapply(states, function(st) {
+   get_acs(
     year = 2022,
     geography = &quot;tract&quot;,
     geometry = TRUE,
-    state = states[x],
+    state = st,
     key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = &quot;B01003_001&quot;)
-}))
-CT_Geo &lt;- CT_Geo[!CT_Geo$estimate == 0,] # 85396 to 84539
+}))</code></pre>
+<pre><code>## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS</code></pre>
+<pre class="r"><code>CT_Geo &lt;- CT_Geo[!CT_Geo$estimate == 0,] 
 ACS_CT_2022_Geometry &lt;- CT_Geo[, c(&quot;GEOID&quot;, &quot;geometry&quot;)]
-save(ACS_CT_2022_Geometry, file = &quot;ACS_CT_2022_Geometry.RData&quot;)
 
-C_Geo &lt;- do.call(rbind, lapply(1:length(states), function(x){
-   ADI_2020_CBG_Raw_NG &lt;- get_acs(
+C_Geo &lt;- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2022,
     geography = &quot;county&quot;,
     geometry = TRUE,
-    state = states[x],
+    state = st,
     key = Sys.getenv(&quot;CENSUS_API_KEY&quot;),
     variables = &quot;B01003_001&quot;)
-}))
-C_Geo &lt;- C_Geo[!C_Geo$estimate == 0,] #3222 as none had 0
-ACS_C_2022_Geometry &lt;- C_Geo[, c(&quot;GEOID&quot;, &quot;geometry&quot;)]
-save(ACS_C_2022_Geometry, file = &quot;ACS_C_2022_Geometry.RData&quot;)</code></pre>
+}))</code></pre>
+<pre><code>## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS
+## Getting data from the 2018-2022 5-year ACS</code></pre>
+<pre class="r"><code>C_Geo &lt;- C_Geo[!C_Geo$estimate == 0,] 
+ACS_C_2022_Geometry &lt;- C_Geo[, c(&quot;GEOID&quot;, &quot;geometry&quot;)]</code></pre>
 </div>
 </div>
 <p><br><br></p>
 </div>
-</div>
-<div id="group-quarters" class="section level2" number="2.2">
-<h2><span class="header-section-number">2.2</span> Group Quarters</h2>
+<div id="group-quarters-small-populations" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Group Quarters &amp;
+Small Populations</h2>
 <hr />
-<p>There are areas whose populations constitute individuals who are in
-group quarters which consist of two main groups: - Institutionalized -
-Adult correctional facilities - Nursing facilities -
-Non-Institutionalizes - College/University student housing</p>
-<p>Areas whose populations consist totally of group-quartered
-individuals cannot have an index properly calculated since the relevancy
-of much of the measures are not applicable and many of the policies and
-interventions may not be impactful for these populations. The
-neighborhood ADI addresses these areas by referring to <a href="https://www.sciencedirect.com/science/article/pii/S1047279701002216">Roux
-et al. (2001)</a> where they recommend removing areas that had 33% or
-more of their population living in group quarters (all types).</p>
-<p>Unfortunately, the measures of group quarters, specifically tables
-B26001, B26103, and B26203 have NAs for all three geographies and so we
-will have to discuss and source out options accordingly.</p>
+<p><br></p>
+<p>The Neighborhood Atlas NA-ADI applies several suppression rules,
+excluding block groups with (1) ≥ 33% of residents in group quarters,
+(2) population &lt; 100 or &lt; 30 housing units, or (3) missing key ACS
+inputs (“QDI”), following guidance from <a href="https://www.sciencedirect.com/science/article/pii/S1047279701002216">Roux
+et al. (2001)</a>. These criteria remove a small fraction of areas
+nationally but disproportionately affect settings such as prisons,
+nursing homes, college dormitory tracts, and very small rural
+communities.</p>
+<p>In ReADI, we do not automatically exclude these areas. Although
+estimates for group-quarters–heavy or very small-population units are
+inherently less precise, the factor analysis in ReADI is
+population-weighted, which substantially downweights their influence on
+the estimation of loadings and scores while still allowing these units
+to receive values. In many applications, these areas are themselves
+important to evaluate, and suppressing them by default can obscure
+relevant patterns.</p>
+<p>Because we provide the code, raw factor scores and the nationally
+ranked ReADI scores, users who prefer to exclude or analyze these units
+separately can do so easily based on their own analytic requirements.
+This approach maximizes transparency and flexibility while minimizing
+the impact of imprecise units on the construction of the index
+itself.</p>
 <p><br><br></p>
 </div>
 <div id="population-size" class="section level2" number="2.3">
 <h2><span class="header-section-number">2.3</span> Population Size</h2>
 <hr />
-<p><a href="https://www.sciencedirect.com/science/article/pii/S1047279701002216">Roux
-et al. (2001)</a> also recommended removing areas which had a population
-size &lt; 100 or had less than 30 housing units. This is something to
-consider although this may remove areas which could benefit from an ADI
-score. That being said, those with reported populations of 0 should be
-removed and we will do so below. as there are census tracts with such
-areas which have to be removed. The amount of areas removed are detailed
-in the table below.</p>
+<p><br></p>
+<p>Some geographic units have no residents or correspond to areas such
+as open water, uninhabited land, or industrial zones. Because these
+units do not meaningfully contribute to the construction of a
+deprivation index and can interfere with both imputation and factor
+analysis, we remove them prior to processing. The table below summarizes
+the number of remaining units at each geographic level after this basic
+population filter is applied.</p>
 <div class="row">
 <div class="col-md-4">
 <table>
@@ -3591,17 +3955,13 @@ in the table below.</p>
 </div>
 </div>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code494">Show
-Code</button>
-<div id="code494" class="collapse">
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code559">
+Show Code
+</button>
+<div id="code559" class="collapse">
 <pre class="r"><code>ReADI_2022_CBG_Raw &lt;- ReADI_2022_CBG_Raw[!ReADI_2022_CBG_Raw$B01003_001 == 0,] 
-save(ReADI_2022_CBG_Raw, file = &quot;ReADI_2022_CBG_Raw.RData&quot;)
-
 ReADI_2022_CT_Raw &lt;- ReADI_2022_CT_Raw[!ReADI_2022_CT_Raw$B01003_001 == 0,] 
-save(ReADI_2022_CT_Raw, file = &quot;ReADI_2022_CT_Raw.RData&quot;)
-
-ReADI_2022_C_Raw &lt;- ReADI_2022_C_Raw[!ReADI_2022_C_Raw$B01003_001 == 0,] 
-save(ReADI_2022_C_Raw, file = &quot;ReADI_2022_C_Raw.RData&quot;)</code></pre>
+ReADI_2022_C_Raw &lt;- ReADI_2022_C_Raw[!ReADI_2022_C_Raw$B01003_001 == 0,] </code></pre>
 </div>
 </div>
 <p><br><br></p>
@@ -3609,8 +3969,11 @@ save(ReADI_2022_C_Raw, file = &quot;ReADI_2022_C_Raw.RData&quot;)</code></pre>
 <div id="missing-values" class="section level2" number="2.4">
 <h2><span class="header-section-number">2.4</span> Missing Values</h2>
 <hr />
-<p>Below is a summary of the amount of missing values among variables
-with missing information:</p>
+<p><br></p>
+<p>Table 1 below summarizes the extent of missing data for variables
+with incomplete information at each geographic level. Only a subset of
+components have any missing values, and for most variables the
+proportion of missingness is small.</p>
 <div class="row">
 <div class="col-md-6">
 <table>
@@ -3655,25 +4018,30 @@ with missing information:</p>
 </div>
 </div>
 <p><br></p>
-<p>Among the missing data there were 12 counties which had NAs for one
-of these variables:</p>
+<p>Table 2 lists the 12 counties with missing values on at least one
+component variable. These counties are almost entirely very low
+population areas, which appears to be the primary source of ACS
+nonreporting. Kalawao County in Hawaii is a notable example: it is an
+isolated, historically protected community with a very small resident
+population, and several ACS estimates are suppressed or unavailable for
+this county.</p>
 <div style="margin:16px 0">
 <center>
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code569">
 <h4 class="text-white">
-County NAs
+<p>County NAs</p>
 </h4>
 </button>
 </center>
 <div id="code569" class="collapse">
 <table style="width:100%;">
 <colgroup>
-<col width="27%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
-<col width="14%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -3786,121 +4154,240 @@ County NAs
 </table>
 </div>
 </div>
-<p>Of note, the above counties all consist of low population areas which
-seems to be the source for the missing information. Kalawao County in
-Hawaii is the most unique in that it is a very isolated and protected
-community which originated as a quarantine village for those with
-leprosy and the remaining inhabitants are all that are remaining and
-will be able to reside there.</p>
-<p>Of important note is of all of the measures which have missing
-information for all geographical regions, it consists of the four
-currency variables which are those at the center of the standardization
-issues. This means that imputation is required only for the very
-measures which are driving the neighborhood ADI compounding the ADI
-issues even further.</p>
+<p>Across geographies, virtually all systematic missingness occurs in
+the four currency variables that are central to ADI construction (median
+family income, median home value, median rent, and median mortgage). In
+other words, the variables at the core of the standardization issues in
+the NA-ADI are also the ones that require imputation in ReADI. This
+concentration of missingness makes it especially important to handle
+imputation carefully, as decisions for these variables directly affect
+the resulting deprivation scores.</p>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code498">Show
-Code</button>
-<div id="code498" class="collapse">
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code634">
+Show Code
+</button>
+<div id="code634" class="collapse">
 <pre class="r"><code># By Variables
-NA_Vars &lt;- ReADI_2022_CBG_Raw[, colSums(is.na(ReADI_2022_CBG_Raw)) &gt; 0]
-NA_Vars &lt;- as.data.frame(colSums(is.na(NA_Vars))) 
-colnames(NA_Vars) &lt;- &quot;CBG_N&quot;
+na_stats &lt;- function(dat, vars) {
+  n_miss &lt;- colSums(is.na(dat[, vars, drop = FALSE]))
+  perc   &lt;- round(n_miss / nrow(dat) * 100, 2)
+  list(N = n_miss, P = perc)
+}
 
-NA_Vars$Perc_NA_CBG &lt;- sapply(1:nrow(NA_Vars), function (x){val &lt;- round((NA_Vars[x,]/nrow(ReADI_2022_CBG_Raw))*100,2)})
-NA_Vars_CT &lt;- ReADI_2022_CT_Raw[, colSums(is.na(ReADI_2022_CT_Raw)) &gt; 0]
-identical(colnames(NA_Vars_CT), rownames(NA_Vars))
-NA_Vars$CT_N &lt;- colSums(is.na(NA_Vars_CT))
+vars_cbg &lt;- names(which(colSums(is.na(ReADI_2022_CBG_Raw)) &gt; 0))
 
-NA_Vars$Perc_NA_CT &lt;- sapply(1:nrow(NA_Vars), function (x){val &lt;- round((NA_Vars[x,&quot;CT_N&quot;]/nrow(ReADI_2022_CT_Raw))*100,2)})
-NA_Vars_C &lt;- ReADI_2022_C_Raw[, colSums(is.na(ReADI_2022_C_Raw)) &gt; 0]
-identical(colnames(NA_Vars_C), rownames(NA_Vars))
-NA_Vars$C_N &lt;- colSums(is.na(NA_Vars_C))
-NA_Vars$Perc_NA_C &lt;- sapply(1:nrow(NA_Vars), function (x){val &lt;- round((NA_Vars[x,&quot;C_N&quot;]/nrow(ReADI_2022_C_Raw))*100,2)})
+stopifnot(
+  identical(vars_cbg, names(which(colSums(is.na(ReADI_2022_CT_Raw)) &gt; 0))),
+  identical(vars_cbg, names(which(colSums(is.na(ReADI_2022_C_Raw)) &gt; 0))))
 
-# 
+cbg &lt;- na_stats(ReADI_2022_CBG_Raw, vars_cbg)
+ct  &lt;- na_stats(ReADI_2022_CT_Raw,  vars_cbg)
+c   &lt;- na_stats(ReADI_2022_C_Raw,   vars_cbg)
+
+## combine into one data.frame
+NA_Vars &lt;- data.frame(
+  Variable    = vars_cbg,
+  CBG_N       = cbg$N,
+  Perc_NA_CBG = cbg$P,
+  CT_N        = ct$N,
+  Perc_NA_CT  = ct$P,
+  C_N         = c$N,
+  Perc_NA_C   = c$P,
+  row.names   = vars_cbg,
+  check.names = FALSE)
+
+# Missing by county
 CountiesMissing &lt;- ReADI_2022_C_Raw[rowSums(is.na(ReADI_2022_C_Raw)) &gt; 0,]
 
 # By Geo Area
 NA_CBG_GEOs &lt;- ReADI_2022_CBG_Raw[rowSums(is.na(ReADI_2022_CBG_Raw)) &gt; 0,]
 NA_CBG_GEOs &lt;- as.data.frame(rowSums(is.na(NA_CBG_GEOs))) 
-table(NA_CBG_GEOs[1]) # 4 max
-
-NA_CT_GEOs &lt;- ReADI_2022_CT_Raw[rowSums(is.na(ReADI_2022_CT_Raw)) &gt; 0,]
+table(NA_CBG_GEOs[1]) # 4 max</code></pre>
+<pre><code>## rowSums(is.na(NA_CBG_GEOs))
+##     1     2     3     4 
+## 73696 19851  3902  1757</code></pre>
+<pre class="r"><code>NA_CT_GEOs &lt;- ReADI_2022_CT_Raw[rowSums(is.na(ReADI_2022_CT_Raw)) &gt; 0,]
 NA_CT_GEOs &lt;- as.data.frame(rowSums(is.na(NA_CT_GEOs))) 
-table(NA_CT_GEOs[1]) # 4 max
-
-NA_C_GEOs &lt;- ReADI_2022_C_Raw[rowSums(is.na(ReADI_2022_C_Raw)) &gt; 0,]
+table(NA_CT_GEOs[1]) # 4 max</code></pre>
+<pre><code>## rowSums(is.na(NA_CT_GEOs))
+##    1    2    3    4 
+## 5440 1418  104  417</code></pre>
+<pre class="r"><code>NA_C_GEOs &lt;- ReADI_2022_C_Raw[rowSums(is.na(ReADI_2022_C_Raw)) &gt; 0,]
 NA_C_GEOs &lt;- as.data.frame(rowSums(is.na(NA_C_GEOs))) 
 table(NA_C_GEOs[1]) # 4 max</code></pre>
+<pre><code>## rowSums(is.na(NA_C_GEOs))
+## 1 2 3 
+## 7 2 3</code></pre>
 </div>
 </div>
 <p><br><br></p>
 <div id="imputation" class="section level3" number="2.4.1">
 <h3><span class="header-section-number">2.4.1</span> Imputation</h3>
 <hr />
-<p>We will perform a nearest neighbor imputation using type Queen
-contiguity. The median values of all border touching geographies will be
-used to replace NAs for the respective geographical levels within state.
-Imputation will happen iteratively until no further CBGs can be imputed.
-Among those which can’t be imputed in this way we will then impute with
-the average of the upper level geography if appropriate.</p>
-<p>When running the spatial imputation function (impute.fun) you may see
-some warnings. These arise for geographic units that have no contiguous
-neighbors (e.g., islands, national parks, naval facilities) or whose
-neighbors all have missing values. In those cases the function correctly
-leaves their values as NA, and these units are handled explicitly in the
-subsequent step (by exclusion or by borrowing from a higher-level
-geography). These warnings are expected and do not indicate a problem
-with the imputation.</p>
+<p><br></p>
+<p>We use spatial imputation to address missing values in a small subset
+of key variables before constructing ReADI. For each geography (block
+group, tract, county), missing values are imputed using neighboring
+units defined by queen contiguity within state (polygons that share a
+border or a vertex).</p>
+<p>In brief, the procedure:</p>
+<ol style="list-style-type: decimal">
+<li>Joins the variable of interest to its corresponding geometry within
+each state.</li>
+<li>Builds a queen-contiguity neighbor list using
+<em>spdep::poly2nb()</em>.</li>
+<li>Iteratively replaces missing values with the median of their
+neighbors’ values.</li>
+<li>Stops when no further values can be filled in using this rule.</li>
+</ol>
+<p>Newly imputed values are allowed to contribute to subsequent
+iterations, so clusters of missingness are gradually filled in from
+their observed borders inward. Units that remain missing after this
+process are typically geographically isolated (for example, islands,
+national parks, or small federal facilities) or have neighbours that are
+all missing for that variable.</p>
+<p>When running the spatial imputation function you may see warnings
+such as:</p>
+<ul>
+<li>“some observations have no neighbours”</li>
+<li>“neighbour object has X sub-graphs”</li>
+</ul>
+<p>These messages are expected for real-world geographies and do not
+indicate that the imputation has failed. “No neighbors” means a polygon
+has no contiguous neighbors under queen contiguity and therefore cannot
+borrow information; “sub-graphs” indicates that the adjacency graph is
+split into separate clusters (for example, mainland vs islands), and
+imputation is carried out within each cluster separately.</p>
+<p>We do not force additional neighbors (for example, by using large
+snapping tolerances or k-nearest-neighbor rules) because that would
+introduce arbitrary spatial relationships that are difficult to justify.
+A small number of units are therefore expected to remain missing after
+spatial imputation and are handled explicitly in later steps.</p>
+<blockquote>
+<p>Imputation Functions</p>
+</blockquote>
+<p>The following code defines the reusable functions used for spatial
+imputation at each geography:</p>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code531">Imputation
-Function</button>
-<div id="code531" class="collapse">
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code723">
+<p>Imputation Function</p>
+</button>
+<div id="code723" class="collapse">
 <pre class="r"><code>impute.fun &lt;- function(data, var, shape) {
+  # pull GEOID + variable, rename to &quot;estimate&quot;
   variable &lt;- data[, c(&quot;GEOID&quot;, var)]
   colnames(variable) &lt;- c(&quot;GEOID&quot;, &quot;estimate&quot;)
   message(paste0(sum(is.na(variable$estimate)), &quot; missing before imputation.&quot;))
-  df &lt;- shape %&gt;% left_join(variable, by = &quot;GEOID&quot;)
-  df &lt;- df[!is.na(st_dimension(df)),]
+
+  # join onto shape and drop invalid geometries
+  df &lt;- dplyr::left_join(shape, variable, by = &quot;GEOID&quot;)
+  df &lt;- df[!is.na(sf::st_dimension(df)), ]
+
   df$State &lt;- substr(df$GEOID, 1, 2)
   df$raw.estimate &lt;- df$estimate
-  
-  # set check values for iterative while loop:
-  missing.pre &lt;- 1
-  missing.post &lt;- 0
 
-  # while loop for iterations!
-  while(missing.pre &gt; missing.post) { 
-    missing.pre &lt;- sum(is.na(df$estimate))
-    imputed &lt;- bind_rows(lapply(unique(df$State), function(x){
-      df2 &lt;- df[df$State == x,]
-      df2$index &lt;- 1:nrow(df2)
-      df2$nb &lt;- spdep::poly2nb(df2, queen = TRUE)
-      df2$geometry &lt;- NULL
-      df2$imputed &lt;- unlist(lapply(df2$nb, function(z){
-        median(df2$estimate[z], na.rm = T)}))
-      df2 &lt;- df2[, c(&quot;GEOID&quot;, &quot;estimate&quot;, &quot;State&quot;, &quot;imputed&quot;)]
-      return(df2)
-      }))
-    df$imputed &lt;- NULL
-    df &lt;- left_join(df, imputed, by = c(&quot;GEOID&quot;, &quot;estimate&quot;, &quot;State&quot;))
-    df$estimate &lt;- ifelse(is.na(df$estimate), df$imputed, df$estimate)
-    missing.post &lt;- sum(is.na(df$estimate))
+  n &lt;- nrow(df)
+  states &lt;- df$State
+  state_levels &lt;- unique(states)
+
+  # precompute row indices per state
+  idx_list &lt;- split(seq_len(n), states)
+
+  # precompute neighbour lists per state (geometry only)
+  nb_list &lt;- vector(&quot;list&quot;, length(state_levels))
+  names(nb_list) &lt;- state_levels
+  for (st in state_levels) {
+    idx &lt;- idx_list[[st]]
+    nb_list[[st]] &lt;- spdep::poly2nb(df[idx, ], queen = TRUE)
   }
+
+  imputed_last &lt;- rep(NA_real_, n)  # will hold the last round of neighbour medians
+
+  repeat {
+    missing_pre &lt;- sum(is.na(df$estimate))
+
+    # compute neighbour medians for current estimates
+    imputed &lt;- rep(NA_real_, n)
+    for (st in state_levels) {
+      idx &lt;- idx_list[[st]]
+      est_state &lt;- df$estimate[idx]
+      nb_state  &lt;- nb_list[[st]]
+
+      imputed[idx] &lt;- vapply(
+        nb_state,
+        function(z) stats::median(est_state[z], na.rm = TRUE),
+        numeric(1)
+      )
+    }
+
+    # keep a copy of the latest neighbour medians
+    imputed_last &lt;- imputed
+
+    # same logic as before: only fill where estimate is NA
+    na_pos &lt;- which(is.na(df$estimate))
+    df$estimate[na_pos] &lt;- imputed[na_pos]
+
+    missing_post &lt;- sum(is.na(df$estimate))
+    if (missing_post &gt;= missing_pre) break
+  }
+
+  # attach the final neighbour-median predictions
+  df$imputed &lt;- imputed_last
+
   message(paste0(sum(is.na(df$estimate)), &quot; missing after imputing.&quot;))
-  return(df)
+  df
+}
+
+impute_vars &lt;- function(data, shape, vars, level_label = &quot;&quot;) {
+  # inner helper for a single variable
+  impute_one &lt;- function(var_name) {
+    msg_suffix &lt;- if (nzchar(level_label)) paste0(&quot; at &quot;, level_label, &quot; level&quot;) else &quot;&quot;
+    message(&quot;Imputing &quot;, var_name, msg_suffix, &quot; ...&quot;)
+
+    df_imp &lt;- impute.fun(
+      data  = data,
+      var   = var_name,
+      shape = shape
+    )
+
+    # diagnostics (same as you had)
+    message(&quot;Correlation (estimate vs raw) for &quot;, var_name)
+    print(cor.test(df_imp$estimate, df_imp$raw.estimate))
+
+    message(&quot;Correlation (imputed vs raw) for &quot;, var_name)
+    print(cor.test(df_imp$imputed, df_imp$raw.estimate))
+
+    # drop geometry, keep GEOID + estimate, rename back to original var name
+    df_imp$geometry &lt;- NULL
+    out &lt;- df_imp[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
+    names(out)[names(out) == &quot;estimate&quot;] &lt;- var_name
+
+    out
+  }
+
+  # run for all vars
+  res_list &lt;- lapply(vars, impute_one)
+
+  # combine like your chained plyr::join calls
+  imputed &lt;- plyr::join_all(res_list, by = &quot;GEOID&quot;, type = &quot;left&quot;)
+
+  # NA check (same info you were printing manually)
+  na_counts &lt;- sapply(vars, function(v) sum(is.na(imputed[[v]])))
+  message(&quot;Remaining NAs by variable:&quot;)
+  print(na_counts)
+
+  imputed
 }</code></pre>
 </div>
 </div>
 <blockquote>
-<p>CBG</p>
+<p>Block group (CBG) imputation</p>
 </blockquote>
-<p>Imputation was successful in that only the NAs were imputed and
-replaced in the overall dataset though there are some NAs remaining
-which will be investigated below. Out of interest the following table
-will include how correlated the actual measure is to a fully imputed
-measure.</p>
+<p>At the census block group level, spatial imputation is applied to the
+subset of variables with missing values. Only originally missing values
+are replaced; observed values are retained unchanged. Table below
+summarizes the number and proportion of missing values for each imputed
+variable before and after CBG-level imputation.</p>
 <div class="row">
 <div class="col-md-6">
 <table>
@@ -3944,60 +4431,142 @@ measure.</p>
 
 </div>
 </div>
+<p>The code below runs the imputation for block groups and produces the
+post-imputation dataset used in subsequent ReADI construction steps.</p>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code581">Show
-Code</button>
-<div id="code581" class="collapse">
-<pre class="r"><code>load(&quot;ACS_CBG_2022_Geometry.RData&quot;)
-load(&quot;ReADI_2022_CBG_Raw.RData&quot;)
-
-B19013_Impute_CBG &lt;- impute.fun(data = ReADI_2022_CBG_Raw, var = &quot;B19013_001&quot;, shape = ACS_CBG_2022_Geometry)
-head(B19013_Impute_CBG)
-cor.test(B19013_Impute_CBG$estimate, B19013_Impute_CBG$raw.estimate) # should always be 1 as NAs are removed to ensure nothing changed to the non-missing data.
-cor.test(B19013_Impute_CBG$imputed, B19013_Impute_CBG$raw.estimate) 
-B19013_Impute_CBG$geometry &lt;- NULL
-B19013_Impute_CBG &lt;- B19013_Impute_CBG[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B19013_Impute_CBG) &lt;- c(&quot;GEOID&quot;, &quot;B19013_001&quot;)
-
-B25064_Impute_CBG &lt;- impute.fun(data = ReADI_2022_CBG_Raw, var = &quot;B25064_001&quot;, shape = ACS_CBG_2022_Geometry)
-cor.test(B25064_Impute_CBG$estimate, B25064_Impute_CBG$raw.estimate)
-cor.test(B25064_Impute_CBG$imputed, B25064_Impute_CBG$raw.estimate) 
-B25064_Impute_CBG$geometry &lt;- NULL
-B25064_Impute_CBG &lt;- B25064_Impute_CBG[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25064_Impute_CBG) &lt;- c(&quot;GEOID&quot;, &quot;B25064_001&quot;)
-
-B25077_Impute_CBG &lt;- impute.fun(data = ReADI_2022_CBG_Raw, var = &quot;B25077_001&quot;, shape = ACS_CBG_2022_Geometry)
-cor.test(B25077_Impute_CBG$estimate, B25077_Impute_CBG$raw.estimate)
-cor.test(B25077_Impute_CBG$imputed, B25077_Impute_CBG$raw.estimate) 
-B25077_Impute_CBG$geometry &lt;- NULL
-B25077_Impute_CBG &lt;- B25077_Impute_CBG[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25077_Impute_CBG) &lt;- c(&quot;GEOID&quot;, &quot;B25077_001&quot;)
-
-B25088_Impute_CBG &lt;- impute.fun(data = ReADI_2022_CBG_Raw, var = &quot;B25088_002&quot;, shape = ACS_CBG_2022_Geometry)
-cor.test(B25088_Impute_CBG$estimate, B25088_Impute_CBG$raw.estimate)
-cor.test(B25088_Impute_CBG$imputed, B25088_Impute_CBG$raw.estimate) 
-B25088_Impute_CBG$geometry &lt;- NULL
-B25088_Impute_CBG &lt;- B25088_Impute_CBG[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25088_Impute_CBG) &lt;- c(&quot;GEOID&quot;, &quot;B25088_002&quot;)
-
-CBG_2022_Imputed &lt;- plyr::join(B19013_Impute_CBG, B25064_Impute_CBG, by = &quot;GEOID&quot;)
-CBG_2022_Imputed &lt;- plyr::join(CBG_2022_Imputed, B25077_Impute_CBG, by = &quot;GEOID&quot;)
-CBG_2022_Imputed &lt;- plyr::join(CBG_2022_Imputed, B25088_Impute_CBG, by = &quot;GEOID&quot;)
-save(CBG_2022_Imputed, file = &quot;CBG_2022_Imputed.RData&quot;)
-
-sum(is.na(CBG_2022_Imputed$B19013_001)) 
-sum(is.na(CBG_2022_Imputed$B25064_001)) 
-sum(is.na(CBG_2022_Imputed$B25077_001)) 
-sum(is.na(CBG_2022_Imputed$B25088_002)) 
-
-ReADI_CBG_2022_Imp &lt;- ReADI_2022_CBG_Raw[, !colnames(ReADI_2022_CBG_Raw) %in% c(&quot;B19013_001&quot;, &quot;B25064_001&quot;, &quot;B25077_001&quot;, &quot;B25088_002&quot;)]
-ReADI_CBG_2022_Imp &lt;- plyr::join(ReADI_CBG_2022_Imp, CBG_2022_Imputed, by = &quot;GEOID&quot;)
-save(ReADI_CBG_2022_Imp, file = &quot;ReADI_CBG_2022_Imp.RData&quot;)</code></pre>
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code857">
+Show Code
+</button>
+<div id="code857" class="collapse">
+<pre class="r"><code>vars &lt;- c(&quot;B19013_001&quot;, &quot;B25064_001&quot;, &quot;B25077_001&quot;, &quot;B25088_002&quot;)
+CBG_2022_Imputed &lt;- impute_vars(
+  data        = ReADI_2022_CBG_Raw,
+  shape       = ACS_CBG_2022_Geometry,
+  vars        = vars,
+  level_label = &quot;CBG&quot;)</code></pre>
+<pre><code>## Imputing B19013_001 at CBG level ...</code></pre>
+<pre><code>## 15042 missing before imputation.</code></pre>
+<pre><code>## 14 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B19013_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = Inf, df = 225128, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B19013_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 550.34, df = 225103, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.7556302 0.7591527
+## sample estimates:
+##      cor 
+## 0.757397</code></pre>
+<pre><code>## Imputing B25064_001 at CBG level ...</code></pre>
+<pre><code>## 65920 missing before imputation.</code></pre>
+<pre><code>## 29 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25064_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = Inf, df = 174250, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25064_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 622.94, df = 174234, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.8292831 0.8321931
+## sample estimates:
+##       cor 
+## 0.8307438</code></pre>
+<pre><code>## Imputing B25077_001 at CBG level ...</code></pre>
+<pre><code>## 21260 missing before imputation.</code></pre>
+<pre><code>## 14 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25077_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = Inf, df = 218910, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25077_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 1082.6, df = 218885, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.9172939 0.9186124
+## sample estimates:
+##       cor 
+## 0.9179557</code></pre>
+<pre><code>## Imputing B25088_002 at CBG level ...</code></pre>
+<pre><code>## 29910 missing before imputation.</code></pre>
+<pre><code>## 15 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25088_002</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = Inf, df = 210260, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25088_002</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 804.77, df = 210236, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.8678194 0.8699145
+## sample estimates:
+##       cor 
+## 0.8688709</code></pre>
+<pre><code>## Remaining NAs by variable:</code></pre>
+<pre><code>## B19013_001 B25064_001 B25077_001 B25088_002 
+##         14         29         14         15</code></pre>
+<pre class="r"><code>ReADI_CBG_2022_Imp &lt;- ReADI_2022_CBG_Raw[, !names(ReADI_2022_CBG_Raw) %in% vars]
+ReADI_CBG_2022_Imp &lt;- plyr::join(ReADI_CBG_2022_Imp, CBG_2022_Imputed, by = &quot;GEOID&quot;)</code></pre>
 </div>
 </div>
 <blockquote>
 <p>CT</p>
 </blockquote>
+<p>The same spatial imputation strategy is applied at the census tract
+and county levels, using tract and county geometries and state-specific
+neighbor lists. For each geography, only originally missing values are
+imputed, and imputation proceeds iteratively within state until no
+additional units can be filled based on their neighbors.</p>
 <div class="row">
 <div class="col-md-6">
 <table>
@@ -4042,58 +4611,138 @@ save(ReADI_CBG_2022_Imp, file = &quot;ReADI_CBG_2022_Imp.RData&quot;)</code></pr
 </div>
 </div>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code639">Show
-Code</button>
-<div id="code639" class="collapse">
-<pre class="r"><code>load(&quot;ACS_CT_2022_Geometry.RData&quot;)
-load(&quot;ReADI_2022_CT_Raw.RData&quot;)
-
-B19013_Impute_CT &lt;- impute.fun(data = ReADI_2022_CT_Raw, var = &quot;B19013_001&quot;, shape = ACS_CT_2022_Geometry)
-cor.test(B19013_Impute_CT$estimate, B19013_Impute_CT$raw.estimate) # should always be 1, as nas are removed, to ensure nothing changed to the non-missing data.
-cor.test(B19013_Impute_CT$imputed, B19013_Impute_CT$raw.estimate) 
-B19013_Impute_CT$geometry &lt;- NULL
-B19013_Impute_CT &lt;- B19013_Impute_CT[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B19013_Impute_CT) &lt;- c(&quot;GEOID&quot;, &quot;B19013_001&quot;)
-
-B25064_Impute_CT &lt;- impute.fun(data = ReADI_2022_CT_Raw, var = &quot;B25064_001&quot;, shape = ACS_CT_2022_Geometry)
-cor.test(B25064_Impute_CT$estimate, B25064_Impute_CT$raw.estimate)
-cor.test(B25064_Impute_CT$imputed, B25064_Impute_CT$raw.estimate) 
-B25064_Impute_CT$geometry &lt;- NULL
-B25064_Impute_CT &lt;- B25064_Impute_CT[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25064_Impute_CT) &lt;- c(&quot;GEOID&quot;, &quot;B25064_001&quot;)
-
-B25077_Impute_CT &lt;- impute.fun(data = ReADI_2022_CT_Raw, var = &quot;B25077_001&quot;, shape = ACS_CT_2022_Geometry)
-cor.test(B25077_Impute_CT$estimate, B25077_Impute_CT$raw.estimate)
-cor.test(B25077_Impute_CT$imputed, B25077_Impute_CT$raw.estimate) 
-B25077_Impute_CT$geometry &lt;- NULL
-B25077_Impute_CT &lt;- B25077_Impute_CT[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25077_Impute_CT) &lt;- c(&quot;GEOID&quot;, &quot;B25077_001&quot;)
-
-B25088_Impute_CT &lt;- impute.fun(data = ReADI_2022_CT_Raw, var = &quot;B25088_002&quot;, shape = ACS_CT_2022_Geometry)
-cor.test(B25088_Impute_CT$estimate, B25088_Impute_CT$raw.estimate)
-cor.test(B25088_Impute_CT$imputed, B25088_Impute_CT$raw.estimate) 
-B25088_Impute_CT$geometry &lt;- NULL
-B25088_Impute_CT &lt;- B25088_Impute_CT[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25088_Impute_CT) &lt;- c(&quot;GEOID&quot;, &quot;B25088_002&quot;)
-
-CT_2022_Imputed &lt;- plyr::join(B19013_Impute_CT, B25064_Impute_CT, by = &quot;GEOID&quot;)
-CT_2022_Imputed &lt;- plyr::join(CT_2022_Imputed, B25077_Impute_CT, by = &quot;GEOID&quot;)
-CT_2022_Imputed &lt;- plyr::join(CT_2022_Imputed, B25088_Impute_CT, by = &quot;GEOID&quot;)
-save(CT_2022_Imputed, file = &quot;CT_2022_Imputed.RData&quot;)
-
-sum(is.na(CT_2022_Imputed$B19013_001)) 
-sum(is.na(CT_2022_Imputed$B25064_001)) 
-sum(is.na(CT_2022_Imputed$B25077_001)) 
-sum(is.na(CT_2022_Imputed$B25088_002)) 
-
-ReADI_CT_2022_Imp &lt;- ReADI_2022_CT_Raw[, !colnames(ReADI_2022_CT_Raw) %in% c(&quot;B19013_001&quot;, &quot;B25064_001&quot;, &quot;B25077_001&quot;, &quot;B25088_002&quot;)]
-ReADI_CT_2022_Imp &lt;- plyr::join(ReADI_CT_2022_Imp, CT_2022_Imputed, by = &quot;GEOID&quot;)
-save(ReADI_CT_2022_Imp, file = &quot;ReADI_CT_2022_Imp.RData&quot;)</code></pre>
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code892">
+Show Code
+</button>
+<div id="code892" class="collapse">
+<pre class="r"><code>CT_2022_Imputed &lt;- impute_vars(
+  data        = ReADI_2022_CT_Raw,
+  shape       = ACS_CT_2022_Geometry,
+  vars        = vars,
+  level_label = &quot;CT&quot;)</code></pre>
+<pre><code>## Imputing B19013_001 at CT level ...</code></pre>
+<pre><code>## 724 missing before imputation.</code></pre>
+<pre><code>## 4 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B19013_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = 1.9428e+10, df = 83813, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B19013_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 388.56, df = 83794, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.7994933 0.8043267
+## sample estimates:
+##       cor 
+## 0.8019231</code></pre>
+<pre><code>## Imputing B25064_001 at CT level ...</code></pre>
+<pre><code>## 4392 missing before imputation.</code></pre>
+<pre><code>## 4 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25064_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = Inf, df = 80145, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25064_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 436.16, df = 80126, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.8367624 0.8408667
+## sample estimates:
+##       cor 
+## 0.8388264</code></pre>
+<pre><code>## Imputing B25077_001 at CT level ...</code></pre>
+<pre><code>## 2344 missing before imputation.</code></pre>
+<pre><code>## 4 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25077_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = 1.3604e+10, df = 82193, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25077_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 673.1, df = 82174, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.9189838 0.9210832
+## sample estimates:
+##       cor 
+## 0.9200401</code></pre>
+<pre><code>## Imputing B25088_002 at CT level ...</code></pre>
+<pre><code>## 2796 missing before imputation.</code></pre>
+<pre><code>## 4 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25088_002</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = Inf, df = 81741, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25088_002</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 569.7, df = 81722, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.8923977 0.8951560
+## sample estimates:
+##       cor 
+## 0.8937853</code></pre>
+<pre><code>## Remaining NAs by variable:</code></pre>
+<pre><code>## B19013_001 B25064_001 B25077_001 B25088_002 
+##          4          4          4          4</code></pre>
+<pre class="r"><code>ReADI_CT_2022_Imp &lt;- ReADI_2022_CT_Raw[, !names(ReADI_2022_CT_Raw) %in% vars]
+ReADI_CT_2022_Imp &lt;- plyr::join(ReADI_CT_2022_Imp, CT_2022_Imputed, by = &quot;GEOID&quot;)</code></pre>
 </div>
 </div>
 <blockquote>
 <p>C</p>
 </blockquote>
+<p>The same spatial imputation strategy is applied at the census tract
+and county levels, using tract and county geometries and state-specific
+neighbor lists. For each geography, only originally missing values are
+imputed, and imputation proceeds iteratively within state until no
+additional units can be filled based on their neighbors.</p>
 <div class="row">
 <div class="col-md-6">
 <table>
@@ -4138,97 +4787,177 @@ save(ReADI_CT_2022_Imp, file = &quot;ReADI_CT_2022_Imp.RData&quot;)</code></pre>
 </div>
 </div>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code701">Show
-Code</button>
-<div id="code701" class="collapse">
-<pre class="r"><code>load(&quot;ACS_C_2022_Geometry.RData&quot;)
-load(&quot;ReADI_2022_C_Raw.RData&quot;)
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code926">
+Show Code
+</button>
+<div id="code926" class="collapse">
+<pre class="r"><code>## Remove DC for spatial imputation
+data_no_dc  &lt;- ReADI_2022_C_Raw[ReADI_2022_C_Raw$State != &quot; District of Columbia&quot;, ]
+geoid_dc    &lt;- ReADI_2022_C_Raw[ReADI_2022_C_Raw$State == &quot; District of Columbia&quot;, &quot;GEOID&quot;]
+shape_no_dc &lt;- ACS_C_2022_Geometry[!ACS_C_2022_Geometry$GEOID %in% geoid_dc, ]
 
-## For the code to work you need to remove state 11 (DC) as it has only one county and will trigger an error.
-table(ReADI_2022_C_Raw$State)
-data = ReADI_2022_C_Raw[!ReADI_2022_C_Raw$State == &quot; District of Columbia&quot;,]
-geoid_rm &lt;- ReADI_2022_C_Raw[ReADI_2022_C_Raw$State == &quot; District of Columbia&quot;, &quot;GEOID&quot;]
-shape = ACS_C_2022_Geometry[!ACS_C_2022_Geometry$GEOID %in% geoid_rm,]
-
-B19013_Impute_C &lt;- impute.fun(data = data, var = &quot;B19013_001&quot;, shape = shape)
-cor.test(B19013_Impute_C$estimate, B19013_Impute_C$raw.estimate)
-cor.test(B19013_Impute_C$imputed, B19013_Impute_C$raw.estimate) 
-B19013_Impute_C$geometry &lt;- NULL
-B19013_Impute_C &lt;- B19013_Impute_C[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B19013_Impute_C) &lt;- c(&quot;GEOID&quot;, &quot;B19013_001&quot;)
-
-B25064_Impute_C &lt;- impute.fun(data = data, var = &quot;B25064_001&quot;, shape = shape)
-cor.test(B25064_Impute_C$estimate, B25064_Impute_C$raw.estimate)
-cor.test(B25064_Impute_C$imputed, B25064_Impute_C$raw.estimate) 
-B25064_Impute_C$geometry &lt;- NULL
-B25064_Impute_C &lt;- B25064_Impute_C[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25064_Impute_C) &lt;- c(&quot;GEOID&quot;, &quot;B25064_001&quot;)
-
-B25077_Impute_C &lt;- impute.fun(data = data, var = &quot;B25077_001&quot;, shape = shape)
-cor.test(B25077_Impute_C$estimate, B25077_Impute_C$raw.estimate)
-cor.test(B25077_Impute_C$imputed, B25077_Impute_C$raw.estimate) 
-B25077_Impute_C$geometry &lt;- NULL
-B25077_Impute_C &lt;- B25077_Impute_C[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25077_Impute_C) &lt;- c(&quot;GEOID&quot;, &quot;B25077_001&quot;)
-
-B25088_Impute_C &lt;- impute.fun(data = data, var = &quot;B25088_002&quot;, shape = shape)
-cor.test(B25088_Impute_C$estimate, B25088_Impute_C$raw.estimate)
-cor.test(B25088_Impute_C$imputed, B25088_Impute_C$raw.estimate) 
-B25088_Impute_C$geometry &lt;- NULL
-B25088_Impute_C &lt;- B25088_Impute_C[, c(&quot;GEOID&quot;, &quot;estimate&quot;)]
-colnames(B25088_Impute_C) &lt;- c(&quot;GEOID&quot;, &quot;B25088_002&quot;)
-
-C_2022_Imputed &lt;- plyr::join(B19013_Impute_C, B25064_Impute_C, by = &quot;GEOID&quot;)
-C_2022_Imputed &lt;- plyr::join(C_2022_Imputed, B25077_Impute_C, by = &quot;GEOID&quot;)
-C_2022_Imputed &lt;- plyr::join(C_2022_Imputed, B25088_Impute_C, by = &quot;GEOID&quot;)
-save(C_2022_Imputed, file = &quot;C_2022_Imputed.RData&quot;)
-
-sum(is.na(C_2022_Imputed$B19013_001)) 
-sum(is.na(C_2022_Imputed$B25064_001)) 
-sum(is.na(C_2022_Imputed$B25077_001)) 
-sum(is.na(C_2022_Imputed$B25088_002)) 
-
-ReADI_C_2022_Imp &lt;- ReADI_2022_C_Raw[, !colnames(ReADI_2022_C_Raw) %in% c(&quot;B19013_001&quot;, &quot;B25064_001&quot;, &quot;B25077_001&quot;, &quot;B25088_002&quot;)]
+C_2022_Imputed &lt;- impute_vars(
+  data        = data_no_dc,
+  shape       = shape_no_dc,
+  vars        = vars,
+  level_label = &quot;county (excluding DC)&quot;)</code></pre>
+<pre><code>## Imputing B19013_001 at county (excluding DC) level ...</code></pre>
+<pre><code>## 1 missing before imputation.</code></pre>
+<pre><code>## 0 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B19013_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = Inf, df = 3218, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B19013_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 70.972, df = 3207, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.7678229 0.7947632
+## sample estimates:
+##       cor 
+## 0.7816574</code></pre>
+<pre><code>## Imputing B25064_001 at county (excluding DC) level ...</code></pre>
+<pre><code>## 10 missing before imputation.</code></pre>
+<pre><code>## 0 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25064_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = 2688126783, df = 3209, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25064_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 84.971, df = 3198, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.8215354 0.8428257
+## sample estimates:
+##       cor 
+## 0.8324876</code></pre>
+<pre><code>## Imputing B25077_001 at county (excluding DC) level ...</code></pre>
+<pre><code>## 3 missing before imputation.</code></pre>
+<pre><code>## 0 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25077_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = Inf, df = 3216, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25077_001</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 96.467, df = 3205, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.8533113 0.8710609
+## sample estimates:
+##      cor 
+## 0.862451</code></pre>
+<pre><code>## Imputing B25088_002 at county (excluding DC) level ...</code></pre>
+<pre><code>## 6 missing before imputation.</code></pre>
+<pre><code>## 0 missing after imputing.</code></pre>
+<pre><code>## Correlation (estimate vs raw) for B25088_002</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$estimate and df_imp$raw.estimate
+## t = 2689801629, df = 3213, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  1 1
+## sample estimates:
+## cor 
+##   1</code></pre>
+<pre><code>## Correlation (imputed vs raw) for B25088_002</code></pre>
+<pre><code>## 
+##  Pearson&#39;s product-moment correlation
+## 
+## data:  df_imp$imputed and df_imp$raw.estimate
+## t = 94.341, df = 3202, p-value &lt; 2.2e-16
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  0.8481233 0.8664635
+## sample estimates:
+##       cor 
+## 0.8575657</code></pre>
+<pre><code>## Remaining NAs by variable:</code></pre>
+<pre><code>## B19013_001 B25064_001 B25077_001 B25088_002 
+##          0          0          0          0</code></pre>
+<pre class="r"><code>ReADI_C_2022_Imp &lt;- ReADI_2022_C_Raw[, !names(ReADI_2022_C_Raw) %in% vars]
 ReADI_C_2022_Imp &lt;- plyr::join(ReADI_C_2022_Imp, C_2022_Imputed, by = &quot;GEOID&quot;)
 
-# replacing District of Columbia data removed in previous line.
-identical(ReADI_2022_C_Raw$GEOID, ReADI_C_2022_Imp$GEOID)
-ReADI_C_2022_Imp$B19013_001 &lt;- ifelse(is.na(ReADI_C_2022_Imp$B19013_001), ReADI_2022_C_Raw$B19013_001, ReADI_C_2022_Imp$B19013_001)
-ReADI_C_2022_Imp$B25064_001 &lt;- ifelse(is.na(ReADI_C_2022_Imp$B25064_001), ReADI_2022_C_Raw$B25064_001, ReADI_C_2022_Imp$B25064_001)
-ReADI_C_2022_Imp$B25077_001 &lt;- ifelse(is.na(ReADI_C_2022_Imp$B25077_001), ReADI_2022_C_Raw$B25077_001, ReADI_C_2022_Imp$B25077_001)
-ReADI_C_2022_Imp$B25088_002 &lt;- ifelse(is.na(ReADI_C_2022_Imp$B25088_002), ReADI_2022_C_Raw$B25088_002, ReADI_C_2022_Imp$B25088_002)
-save(ReADI_C_2022_Imp, file = &quot;ReADI_C_2022_Imp.RData&quot;)</code></pre>
+stopifnot(identical(ReADI_2022_C_Raw$GEOID, ReADI_C_2022_Imp$GEOID))
+
+## Restore DC’s original values (they were excluded from imputation)
+for (v in vars) {
+  ReADI_C_2022_Imp[[v]] &lt;- ifelse(
+    is.na(ReADI_C_2022_Imp[[v]]),
+    ReADI_2022_C_Raw[[v]],
+    ReADI_C_2022_Imp[[v]]
+  )}</code></pre>
 </div>
 </div>
 <p><br><br></p>
 </div>
-<div id="missing-after-imputation" class="section level3" number="2.4.2">
-<h3><span class="header-section-number">2.4.2</span> Missing After
-Imputation</h3>
+<div id="remaining-missing-values-after-spatial-imputation" class="section level3" number="2.4.2">
+<h3><span class="header-section-number">2.4.2</span> Remaining Missing
+Values After Spatial Imputation</h3>
 <hr />
 <p><br></p>
 <p>After the primary spatial imputation step, a small number of
-geographic units still had missing values. These lingering NAs occurred
+geographic units still have missing values. These remaining NAs occur
 almost entirely in areas that either (1) have no bordering geographies
-to borrow information from (e.g., isolated tracts/CBGs, islands), or (2)
-are special-use areas such as national parks or naval facilities with
-very small or atypically enumerated populations. To address this, we
-applied a hierarchical, geography-specific approach: when appropriate,
-we removed these non-residential or special-use areas from the dataset;
-in all other cases, we imputed remaining values by borrowing from the
-next-highest level of aggregation.</p>
+to borrow information from (for example, isolated tracts or block groups
+and islands) or (2) are special-use areas such as national parks,
+military or naval facilities, or other atypically enumerated locations.
+To handle these cases, we use a simple hierarchical approach: where
+units are clearly non-residential or special-use, we remove them from
+the analytic dataset; otherwise, we borrow information from the
+next-highest relevant geography.</p>
+<p><br><br></p>
 </div>
 <div id="counties" class="section level3" number="2.4.3">
 <h3><span class="header-section-number">2.4.3</span> Counties</h3>
 <hr />
-<p>No counties have missing values after imputation.</p>
+<p><br></p>
+<p>No counties have missing values after spatial imputation.</p>
+<p><br><br></p>
 </div>
 <div id="census-tracts" class="section level3" number="2.4.4">
 <h3><span class="header-section-number">2.4.4</span> Census Tracts</h3>
 <hr />
-<p>Four census tracts remain as NAs after imputation. Information based
-on <a href="https://censusreporter.org/profiles/">Census
-Reporter</a>:</p>
+<p><br></p>
+<p>Four census tracts remain with missing values after imputation. Table
+below summarizes these tracts and their characteristics based on <a href="https://censusreporter.org/profiles/">Census Reporter</a>:</p>
 <div style="margin:16px 0">
 <center>
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855">
@@ -4240,11 +4969,11 @@ CT NAs
 <div id="code855" class="collapse">
 <table>
 <colgroup>
-<col width="12%" />
-<col width="5%" />
-<col width="28%" />
-<col width="10%" />
-<col width="42%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
+<col width="20%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -4288,47 +5017,46 @@ CT NAs
 </table>
 </div>
 </div>
+<p>These tracts are either extremely small, geographically isolated, or
+special-use areas. For ReADI construction, these tracts are removed from
+the tract-level analytic dataset, and any block groups nested entirely
+within them are also excluded (see below).</p>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code787">Show
-Code</button>
-<div id="code787" class="collapse">
-<pre class="r"><code>load(&quot;ReADI_CT_2022_Imp.RData&quot;)
-load(&quot;ACS_CT_2022_Geometry.RData&quot;)
-B19013_001_NAs &lt;- ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp$B19013_001), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)] 
-B25064_001_NAs &lt;- ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp$B25064_001), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)] 
-B25077_001_NAs &lt;- ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp$B25077_001), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)] 
-B25088_002_NAs &lt;- ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp$B25088_002), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)] 
-CT_Missing &lt;- merge(B19013_001_NAs, B25064_001_NAs, all = T)
-CT_Missing &lt;- merge(CT_Missing, B25077_001_NAs, all = T)
-CT_Missing &lt;- merge(CT_Missing, B25088_002_NAs, all = T)
-CT_rm &lt;- c(&quot;06083980100&quot;, &quot;06111980000&quot;, &quot;12087980100&quot;, &quot;26083980100&quot;)
-ReADI_CT_2022_Imp &lt;- ReADI_CT_2022_Imp[!ReADI_CT_2022_Imp$GEOID %in% CT_rm, ] # 84535 remaining - 4 removed
-save(ReADI_CT_2022_Imp, file = &quot;ReADI_CT_2022_Imp.RData&quot;)</code></pre>
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1015">
+Show Code
+</button>
+<div id="code1015" class="collapse">
+<pre class="r"><code>na_list &lt;- lapply(vars, function(v) ReADI_CT_2022_Imp[is.na(ReADI_CT_2022_Imp[[v]]), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)])
+CT_Missing &lt;- unique(do.call(rbind, na_list))
+ReADI_CT_2022_Imp &lt;- ReADI_CT_2022_Imp[!ReADI_CT_2022_Imp$GEOID %in% CT_Missing$GEOID, ]</code></pre>
 </div>
 </div>
 <blockquote>
-<p>Removing CBGs located within remove CTs</p>
+<p>Removing CBGs located within removed tracts</p>
 </blockquote>
-<p>Thirty-two census block groups (CBGs) remain as NAs after imputation,
-of those seven were contained within the census tracts removed above.
-Information based on <a href="https://censusreporter.org/profiles/">Census Reporter</a>:</p>
+<p>Thirty-two census block groups remain with missing values after block
+group level imputation. Of these, four are located within the census
+tracts removed above, and an additional three correspond to national
+parks or similar areas that are not appropriate for inclusion in a
+residential deprivation index. Table below lists these CBGs and their
+characteristics using <a href="https://censusreporter.org/profiles/">Census Reporter</a>:</p>
 <div style="margin:16px 0">
 <center>
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855">
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1023">
 <h4 class="text-white">
 CBG NAs
 </h4>
 </button>
 </center>
-<div id="code855" class="collapse">
-<table>
+<div class="collapse">
+<table style="width:100%;">
 <colgroup>
-<col width="11%" />
-<col width="8%" />
-<col width="25%" />
-<col width="9%" />
-<col width="37%" />
-<col width="6%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
+<col width="16%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -4601,33 +5329,43 @@ CBG NAs
 </table>
 </div>
 </div>
+<p>Block groups nested in removed tracts and clearly non-residential
+CBGs are dropped from the CBG-level analytic dataset.</p>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code860">Show
-Code</button>
-<div id="code860" class="collapse">
-<pre class="r"><code>load(&quot;ReADI_CBG_2022_Imp.RData&quot;)
-load(&quot;ReADI_CT_2022_Imp.RData&quot;)
-B19013_001_NAs &lt;- ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp$B19013_001), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)] # 14
-B25064_001_NAs &lt;- ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp$B25064_001), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)] # 29
-B25077_001_NAs &lt;- ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp$B25077_001), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)] # 14
-B25088_002_NAs &lt;- ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp$B25088_002), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)] # 15
-CBG_Missing &lt;- merge(B19013_001_NAs, B25064_001_NAs, all = T)
-CBG_Missing &lt;- merge(CBG_Missing, B25077_001_NAs, all = T)
-CBG_Missing &lt;- merge(CBG_Missing, B25088_002_NAs, all = T)
-CBG_Missing &lt;- unique(CBG_Missing)
-CBG_rm &lt;- c(&quot;060839801001&quot;, &quot;061119800001&quot;, &quot;120879801001&quot;, &quot;260839801001&quot;, &quot;360050001001&quot;, &quot;360610240002&quot;, &quot;530350927043&quot;)
-ReADI_CBG_2022_Imp &lt;- ReADI_CBG_2022_Imp[!ReADI_CBG_2022_Imp$GEOID %in% CBG_rm, ] # 240165 remaining - 7 removed
-save(ReADI_CBG_2022_Imp, file = &quot;ReADI_CBG_2022_Imp.RData&quot;)</code></pre>
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1087">
+Show Code
+</button>
+<div id="code1087" class="collapse">
+<pre class="r"><code>bad_len &lt;- which(is.na(ReADI_CBG_2022_Imp$GEOID) | nchar(ReADI_CBG_2022_Imp$GEOID) != 12)
+if (length(bad_len) &gt; 0) {
+  stop(&quot;Found invalid CBG GEOIDs (NA or not 12 chars). Example rows: &quot;,
+       paste(head(bad_len, 10), collapse = &quot;, &quot;))
+}
+cbg_na_list &lt;- lapply(vars, function(v) ReADI_CBG_2022_Imp[is.na(ReADI_CBG_2022_Imp[[v]]), c(&quot;GEOID&quot;, &quot;Tract&quot;, &quot;County&quot;, &quot;State&quot;)])
+CBG_Missing &lt;- unique(do.call(rbind, cbg_na_list))
+CBG_Missing$GEOID_CT &lt;- substr(CBG_Missing$GEOID, 1, 11)
+CBG_rm &lt;- CBG_Missing[CBG_Missing$GEOID_CT %in% CT_Missing$GEOID,]$GEOID
+ReADI_CBG_2022_Imp &lt;- ReADI_CBG_2022_Imp[!ReADI_CBG_2022_Imp$GEOID %in% CBG_rm, ]</code></pre>
 </div>
 </div>
 <p><br><br></p>
 </div>
-<div id="cbgs" class="section level3" number="2.4.5">
-<h3><span class="header-section-number">2.4.5</span> CBGs</h3>
+<div id="final-cbg-imputation-using-tract-values" class="section level3" number="2.4.5">
+<h3><span class="header-section-number">2.4.5</span> Final CBG
+Imputation Using Tract Values</h3>
 <hr />
-<p>The remaining CBGs will be imputed with the CT measure they are
-located in resulting in the final results:</p>
+<p><br></p>
+<p>The remaining CBGs with missing values after the steps above are
+imputed using the corresponding census tract level values for the same
+variables. This preserves information from the broader local context
+while avoiding arbitrary spatial borrowing across unrelated areas. Table
+below summarizes the final counts of units retained at each geographic
+level (block group, tract, county) after all imputation and exclusion
+steps.</p>
 <div class="row">
+<div class="col-md-4">
+
+</div>
 <div class="col-md-4">
 <table>
 <thead>
@@ -4656,77 +5394,39 @@ located in resulting in the final results:</p>
 </tbody>
 </table>
 </div>
-<div class="col-md-8">
+<div class="col-md-4">
 
 </div>
 </div>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1019">Show
-Code</button>
-<div id="code1019" class="collapse">
-<pre class="r"><code>load(&quot;ReADI_CBG_2022_Imp.RData&quot;)
-impute_CBG_geo &lt;- CBG_Missing[!CBG_Missing$GEOID %in% CBG_rm, &quot;GEOID&quot;]
-impute_CT_geo &lt;- sapply(length(impute_CBG_geo), function(x){
-  substring(impute_CBG_geo, 1, 11)
-})
-impute_CT_geo &lt;- impute_CT_geo[,1]
-
-impute_data &lt;- ReADI_CT_2022_Imp[ReADI_CT_2022_Imp$GEOID %in% impute_CT_geo, c(&quot;GEOID&quot;, &quot;B19013_001&quot;, &quot;B25064_001&quot;, &quot;B25077_001&quot;, &quot;B25088_002&quot;)]
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1129">
+Show Code
+</button>
+<div id="code1129" class="collapse">
+<pre class="r"><code>impute_CBG_geo &lt;- CBG_Missing[!CBG_Missing$GEOID %in% CBG_rm,]
+impute_data &lt;- ReADI_CT_2022_Imp[ReADI_CT_2022_Imp$GEOID %in% impute_CBG_geo$GEOID_CT, c(&quot;GEOID&quot;, vars)]
+colnames(impute_data) &lt;- paste(colnames(impute_data), &quot;_CT&quot;, sep = &quot;&quot;)
 ReADI_CBG_2022_Imp$GEOID_CT &lt;- substring(ReADI_CBG_2022_Imp$GEOID, 1, 11)
-ReADI_CBG_2022_Imp$B19013_001_T &lt;- ReADI_CBG_2022_Imp$B19013_001
-ReADI_CBG_2022_Imp$B25064_001_T &lt;- ReADI_CBG_2022_Imp$B25064_001
-ReADI_CBG_2022_Imp$B25077_001_T &lt;- ReADI_CBG_2022_Imp$B25077_001
-ReADI_CBG_2022_Imp$B25088_002_T &lt;- ReADI_CBG_2022_Imp$B25088_002
+ReADI_CBG_2022_Imp &lt;- plyr::join(ReADI_CBG_2022_Imp, impute_data, by = &quot;GEOID_CT&quot;, type = &quot;left&quot;)
+ReADI_CBG_2022_Imp[vars] &lt;- lapply(vars, function(v) {ifelse(is.na(ReADI_CBG_2022_Imp[[v]]), ReADI_CBG_2022_Imp[[paste0(v, &quot;_CT&quot;)]], ReADI_CBG_2022_Imp[[v]])})
+ReADI_CBG_2022_Imp[c(&quot;GEOID_CT&quot;, paste0(vars, &quot;_CT&quot;))] &lt;- NULL
 
-# B19013_001
-CBG_Imp &lt;- as.data.frame(sapply(1:nrow(impute_data), function(x){
-  ifelse(ReADI_CBG_2022_Imp$GEOID_CT == impute_data[x, &quot;GEOID&quot;] &amp; is.na(ReADI_CBG_2022_Imp[,&quot;B19013_001_T&quot;]), impute_data[x,&quot;B19013_001&quot;], ReADI_CBG_2022_Imp$B19013_001_T)
-}))
-ReADI_CBG_2022_Imp$B19013_001 &lt;- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11],CBG_Imp[,12],CBG_Imp[,13],CBG_Imp[,14],CBG_Imp[,15],CBG_Imp[,16],CBG_Imp[,17],CBG_Imp[,18],CBG_Imp[,19],CBG_Imp[,20])
-cor.test(ReADI_CBG_2022_Imp$B19013_001_T, ReADI_CBG_2022_Imp$B19013_001)
-sum(is.na(ReADI_CBG_2022_Imp$B19013_001_T))
-sum(is.na(ReADI_CBG_2022_Imp$B19013_001))
-
-# B25064_001
-CBG_Imp &lt;- as.data.frame(sapply(1:nrow(impute_data), function(x){
-  ifelse(ReADI_CBG_2022_Imp$GEOID_CT == impute_data[x, &quot;GEOID&quot;] &amp; is.na(ReADI_CBG_2022_Imp[,&quot;B25064_001_T&quot;]), impute_data[x,&quot;B25064_001&quot;], ReADI_CBG_2022_Imp$B25064_001_T)
-}))
-ReADI_CBG_2022_Imp$B25064_001 &lt;- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11],CBG_Imp[,12],CBG_Imp[,13],CBG_Imp[,14],CBG_Imp[,15],CBG_Imp[,16],CBG_Imp[,17],CBG_Imp[,18],CBG_Imp[,19],CBG_Imp[,20])
-cor.test(ReADI_CBG_2022_Imp$B25064_001_T, ReADI_CBG_2022_Imp$B25064_001)
-sum(is.na(ReADI_CBG_2022_Imp$B25064_001_T))
-sum(is.na(ReADI_CBG_2022_Imp$B25064_001))
-
-# B25077_001
-CBG_Imp &lt;- as.data.frame(sapply(1:nrow(impute_data), function(x){
-  ifelse(ReADI_CBG_2022_Imp$GEOID_CT == impute_data[x, &quot;GEOID&quot;] &amp; is.na(ReADI_CBG_2022_Imp[,&quot;B25077_001_T&quot;]), impute_data[x,&quot;B25077_001&quot;], ReADI_CBG_2022_Imp$B25077_001_T)
-}))
-ReADI_CBG_2022_Imp$B25077_001 &lt;- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11],CBG_Imp[,12],CBG_Imp[,13],CBG_Imp[,14],CBG_Imp[,15],CBG_Imp[,16],CBG_Imp[,17],CBG_Imp[,18],CBG_Imp[,19],CBG_Imp[,20])
-cor.test(ReADI_CBG_2022_Imp$B25077_001_T, ReADI_CBG_2022_Imp$B25077_001)
-sum(is.na(ReADI_CBG_2022_Imp$B25077_001_T))
-sum(is.na(ReADI_CBG_2022_Imp$B25077_001))
-
-# B25088_002
-CBG_Imp &lt;- as.data.frame(sapply(1:nrow(impute_data), function(x){
-  ifelse(ReADI_CBG_2022_Imp$GEOID_CT == impute_data[x, &quot;GEOID&quot;] &amp; is.na(ReADI_CBG_2022_Imp[,&quot;B25088_002_T&quot;]), impute_data[x,&quot;B25088_002&quot;], ReADI_CBG_2022_Imp$B25088_002_T)
-}))
-ReADI_CBG_2022_Imp$B25088_002 &lt;- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11],CBG_Imp[,12],CBG_Imp[,13],CBG_Imp[,14],CBG_Imp[,15],CBG_Imp[,16],CBG_Imp[,17],CBG_Imp[,18],CBG_Imp[,19],CBG_Imp[,20])
-cor.test(ReADI_CBG_2022_Imp$B25088_002_T, ReADI_CBG_2022_Imp$B25088_002)
-sum(is.na(ReADI_CBG_2022_Imp$B25088_002_T))
-sum(is.na(ReADI_CBG_2022_Imp$B25088_002))
-
-ReADI_CBG_2022_Imp$GEOID_CT &lt;- NULL
-ReADI_CBG_2022_Imp$B19013_001_T &lt;- NULL
-ReADI_CBG_2022_Imp$B25064_001_T &lt;- NULL
-ReADI_CBG_2022_Imp$B25077_001_T &lt;- NULL
-ReADI_CBG_2022_Imp$B25088_002_T &lt;- NULL
-sum(is.na(ReADI_CBG_2022_Imp)) # 0
-save(ReADI_CBG_2022_Imp, file = &quot;ReADI_CBG_2022_Imp.RData&quot;)
-
-sum(is.na(ReADI_CBG_2022_Imp))
-sum(is.na(ReADI_CT_2022_Imp))
-sum(is.na(ReADI_C_2022_Imp))</code></pre>
+sum(is.na(ReADI_CBG_2022_Imp))</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>sum(is.na(ReADI_CT_2022_Imp))</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>sum(is.na(ReADI_C_2022_Imp))</code></pre>
+<pre><code>## [1] 0</code></pre>
 </div>
 </div>
+<p>With all preprocessing complete, including variable assembly,
+population filtering, spatial imputation, and resolution of remaining
+missing values, the analytic datasets for counties, census tracts, and
+block groups are now fully prepared for index construction. The
+following section implements the ReADI model itself: calculating
+component variables, fitting the population-weighted factor model,
+extracting loadings and factor scores, and generating the final ReADI
+values and national percentile ranks for each geographic unit.</p>
 <p><br><br></p>
 </div>
 </div>
@@ -4737,36 +5437,41 @@ sum(is.na(ReADI_C_2022_Imp))</code></pre>
 <div id="method" class="section level2" number="3.1">
 <h2><span class="header-section-number">3.1</span> Method</h2>
 <p><br></p>
-<p>These steps are done separately at the county, census tract, and
-census block group levels.</p>
-<p><strong><strong>1.</strong></strong> Using the imputed census data
-taken at each geography the 17 variables will be calculated. Below is a
-table summarizing the variables, census tables, and formulas we will be
-using to calculate the ReADI:</p>
+<p>The steps below describe how ReADI is constructed at each geographic
+level (county, census tract, and census block group). Although the same
+procedure is applied across all three geographies, the models are
+estimated independently within each level so that the resulting loadings
+and scores are geographically appropriate.</p>
+<p><strong><strong>1. Construct the 17 component
+variables:</strong></strong> Using the imputed ACS data for each
+geography, we compute the 17 deprivation-related component variables
+used in ReADI. These variables represent domains such as income,
+education, employment, housing cost burden, household composition, and
+infrastructure access. Table below summarizes each variable, the
+corresponding ACS table or cell, and the formula used in its
+construction.</p>
 <div style="margin:16px 0">
 <center>
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1111">
 <h4 class="text-white">
-CBG ReADI Variables
+<p>CBG ReADI Variables</p>
 </h4>
 </button>
 </center>
 <div id="code1111" class="collapse">
-<table style="width:99%;">
+<table>
 <colgroup>
-<col width="51%" />
-<col width="7%" />
-<col width="5%" />
-<col width="34%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
+<col width="25%" />
 </colgroup>
 <thead>
 <tr class="header">
 <th>Census Variable</th>
 <th>Name</th>
 <th>Table</th>
-<th align="center"><center>
-Formula
-</center></th>
+<th align="center"></th>
 </tr>
 </thead>
 <tbody>
@@ -4880,40 +5585,78 @@ Formula
 </tr>
 </tbody>
 </table>
-<em><sup><span class="math inline">\(^a\)</span> Income disparity in
-2022 was defined as the log of 100×ratio of number of households with
+<p><sup><span class="math inline">\(^a\)</span> Income disparity in 2022
+was defined as the log of 100×ratio of number of households with
 &lt;$20,000 income to number of households with ≥$100,000
-income.</sup></em>
+income.</sup></p>
 </div>
 </div>
-<p><strong><strong>2.</strong></strong> Resulting NAs are converted to 0
-as any found after calculation would be due to both the numerator and
-denominator being 0 and so will be converted to 0 as there are no true
-NAs in the data.</p>
-<p><strong><strong>3.</strong></strong> The 17 calculated variables are
-standardized via zscore.</p>
-<p><strong><strong>4.</strong></strong> Population weights are
-calculated using census variable B01003_001 (Universe: Total population)
-by dividing the areas population from the total population represented
-in the data labelled as POPWT. This value is then transformed where the
-square root + 1 is applied to account for the vastly different
-distributions across geographies and large skews to make them more
-comparable to one another.</p>
-<p><strong><strong>5.</strong></strong> Factor analysis is applied (fa
-function from the stats package) where population weights are applied, a
-1 factor solution requested, and the factor method used is the principal
-factor solution. All other options were default.</p>
-<blockquote>
-<p>CBG</p>
-</blockquote>
+<p><strong><strong>2. Resolve structural zeros:</strong></strong> Any
+remaining NAs after calculation are not true missing values. They occur
+only when both the numerator and denominator of a ratio are zero. These
+structural cases are converted to zero so that they do not propagate
+into later steps.</p>
+<p><strong><strong>3. Standardize the component
+variables:</strong></strong> The 17 component variables are standardized
+using z-scores (mean = 0, standard deviation = 1). Standardization
+ensures that variables measured on different numerical scales (for
+example, percentages vs. dollar-valued medians) contribute appropriately
+to the factor analysis rather than being dominated by variables with
+large numeric ranges.</p>
+<p><strong><strong>4. Compute population weights:</strong></strong>
+Population size for each geographic unit is taken from ACS table
+<strong>B01003_001</strong> (total population). To reduce the influence
+of extremely large or small areas and to make population distributions
+more comparable across geographies, we transform the weights using:
+<span class="math inline">\({POPWT} = \sqrt{\text{population}} +
+1\)</span>. These transformed weights are used as analytic weights in
+the factor model.</p>
+<p><strong><strong>5. Fit the factor model:</strong></strong> A
+one-factor model is estimated using the <em>fa()</em> function from the
+<em>psych</em> package. Key specifications, otherwise default was
+applied:</p>
+<ul>
+<li>method: principal factor extraction</li>
+<li>number of factors: 1</li>
+<li>weights: population-based POPWT</li>
+</ul>
+<p>This procedure produces the following core outputs for each
+geography:</p>
+<ol style="list-style-type: decimal">
+<li><strong>ReADI coefficients</strong>: the estimated scoring
+coefficients for each of the 17 component variables, as derived from the
+one-factor model.</li>
+<li><strong>Raw ReADI score</strong>: a continuous ADI score for each
+unit based on the factor solution (unscaled).</li>
+<li><strong>Nationally ranked ReADI score</strong>: the raw ReADI score
+transformed to a 0–100 national rank, where higher values indicate
+greater deprivation.</li>
+<li><strong>Factor loadings and weights</strong>: the underlying
+loadings and scoring weights that describe how each component
+contributes to the factor and how scores are computed.</li>
+</ol>
+<p>Table below shows the number of NAs and the resulting factor weights
+for block groups.</p>
+<div id="block-group-cbg-readi" class="section level3" number="3.1.1">
+<h3><span class="header-section-number">3.1.1</span> Block group (CBG)
+ReADI</h3>
 <p><br></p>
+<p>Below are the factor weights and scoring coefficients estimated for
+block groups using the 2022 ACS data. These coefficients are applied to
+the standardized component variables to generate both the raw and
+nationally ranked ReADI scores at the CBG level. The code below performs
+the component construction, weighting, factor model estimation, and
+score generation for block groups.</p>
 <div class="row">
-<div class="col-md-3">
+<div class="col-md-4">
+
+</div>
+<div class="col-md-4">
 <div style="margin:16px 0">
 <center>
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1177">
 <h4 class="text-white">
-CBG Weights
+<p>CBG Weights</p>
 </h4>
 </button>
 </center>
@@ -5017,33 +5760,17 @@ CBG Weights
 </div>
 </div>
 </div>
-<div class="col-md-1">
-
-</div>
-<div class="col-md-6">
-<p>The table describes the amount of NAs which resulted from the 17
-variable calculations and which were subsequently converted to 0 and the
-weights resulting from factor analysis. The code produced several
-products, the zscore standardized 17 composite variables, a raw ReADI
-score which can be used to subset down to whichever geographical area is
-relevant for a user’s purposed and then re-scaled from 0-100, and then a
-nationally representative ADI scaled from 0-100. The
-ReADI_2022_CBG_RawVars.RData file has the 17 variables prior to zscore
-them.</p>
-</div>
-<div class="col-md-2">
+<div class="col-md-4">
 
 </div>
 </div>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1209">Show
-Code</button>
-<div id="code1209" class="collapse">
-<pre class="r"><code>load(&quot;ReADI_CBG_2022_Imp.RData&quot;)
-
-ReADI_CBG_2022 &lt;- ReADI_CBG_2022_Imp %&gt;%
-  dplyr::mutate(ReADI_CBG_2022_Imp,
-    MEDFI = B19013_001,
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1296">
+Show Code
+</button>
+<div id="code1296" class="collapse">
+<pre class="r"><code>ReADI_CBG_2022 &lt;- ReADI_CBG_2022_Imp %&gt;%
+  dplyr::mutate(MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
     BELPL = B17017_002/B17017_001*100,
     PL150 = (C17002_005 + C17002_004 + C17002_003 + C17002_002)/C17002_001*100,
@@ -5062,14 +5789,20 @@ ReADI_CBG_2022 &lt;- ReADI_CBG_2022_Imp %&gt;%
     CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
     POPWT = log(B01003_001)
 ) %&gt;%
-  select(GEOID, Block_Group, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT
-)
+  select(GEOID, Block_Group, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT)
 
 # Replacing NA values resulting from 0 values back to 0. 
-colSums(is.na(ReADI_CBG_2022))
-ReADI_CBG_2022[is.na(ReADI_CBG_2022)] &lt;- 0
+colSums(is.na(ReADI_CBG_2022))</code></pre>
+<pre><code>##       GEOID Block_Group       Tract      County       State       MEDFI 
+##           0           0           0           0           0           0 
+##      INCDIS       BELPL       PL150      EDU9YR   HSDPNHIGH       EMPWC 
+##           0         633         503          81          81         446 
+##       UNEMP       MEDHV      MEDRNT     MEDMORT         OWN      SNGPNT 
+##         425           0           0           0         633         633 
+##       NOVEH       NOINT      NOPLUM       CROWD       POPWT 
+##         633         633           0         633           0</code></pre>
+<pre class="r"><code>ReADI_CBG_2022[is.na(ReADI_CBG_2022)] &lt;- 0
 ReADI_2022_CBG_RawVars &lt;- ReADI_CBG_2022
-save(ReADI_2022_CBG_RawVars, file = &quot;ReADI_2022_CBG_RawVars.RData&quot;)
 
 ADI_short &lt;- ReADI_CBG_2022[, c(&quot;GEOID&quot;, &quot;MEDFI&quot;, &quot;INCDIS&quot;, &quot;BELPL&quot;, &quot;PL150&quot;, &quot;EDU9YR&quot;, &quot;HSDPNHIGH&quot;, &quot;EMPWC&quot;, &quot;UNEMP&quot;, &quot;MEDHV&quot;, &quot;MEDRNT&quot;, &quot;MEDMORT&quot;, &quot;OWN&quot;, &quot;SNGPNT&quot;, &quot;NOVEH&quot;, &quot;NOINT&quot;, &quot;NOPLUM&quot;, &quot;CROWD&quot;)]
 rownames(ADI_short) &lt;- ADI_short$GEOID
@@ -5078,8 +5811,8 @@ ADI_short$GEOID &lt;- NULL
 # zscore transform
 ADI_short &lt;- as.data.frame(scale(ADI_short))
 
-# Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
-identical(rownames(ADI_short), ReADI_CBG_2022$GEOID)
+# Factor analysis is performed with a one factor solution
+stopifnot(identical(rownames(ADI_short), ReADI_CBG_2022$GEOID))
 adi.fa &lt;- fa(ADI_short, nfactors = 1, fm = &quot;pa&quot;, weight = ReADI_CBG_2022$POPWT)
 
 # Loadings
@@ -5087,31 +5820,49 @@ ReADI_2022_Loadings &lt;- as.data.frame(loadings(adi.fa)[])
 colnames(ReADI_2022_Loadings) &lt;- &quot;CBG&quot;
 ReADI_2022_Loadings$Vars &lt;- rownames(ReADI_2022_Loadings)
 ReADI_2022_Loadings &lt;- ReADI_2022_Loadings[,c(2,1)]
-save(ReADI_2022_Loadings, file = &quot;ReADI_2022_Loadings.RData&quot;)
 
 # Weights
 ReADI_2022_Wt &lt;- as.data.frame(adi.fa$weights)
 colnames(ReADI_2022_Wt) &lt;- &quot;CBG&quot;
 ReADI_2022_Wt$Vars &lt;- rownames(ReADI_2022_Wt)
 ReADI_2022_Wt &lt;- ReADI_2022_Wt[,c(2,1)]
-save(ReADI_2022_Wt, file = &quot;ReADI_2022_Wt.RData&quot;)
 
-# Pulling the raw scores as the raw SDI, producing the SDI on a scale of 0-100
+# Pulling the raw scores as the raw ReADI, producing the ReADI on a scale of 0-100
 ADI &lt;- as.data.frame(adi.fa$scores)
 colnames(ADI) &lt;- c(&quot;ReADI_CBG_Raw&quot;)
-identical(rownames(ADI), ReADI_CBG_2022$GEOID)
+stopifnot(identical(rownames(ADI), ReADI_CBG_2022$GEOID))
 ADI$ReADI_CBG_NR &lt;- round(percent_rank(ADI$ReADI_CBG_Raw)*100, 0)
 ADI$GEOID &lt;- rownames(ADI)
 ReADI_CBG_2022 &lt;- plyr::join(ReADI_CBG_2022, ADI, by = &quot;GEOID&quot;)
-save(ReADI_CBG_2022, file = &quot;ReADI_CBG_2022.RData&quot;)</code></pre>
+save(ReADI_CBG_2022, file = &quot;ReADI_CBG_2022.RData&quot;)
+write.csv(ReADI_CBG_2022, file = &quot;ReADI_CBG_2022.csv&quot;)</code></pre>
 </div>
 </div>
-<blockquote>
-<p>CT</p>
-</blockquote>
+</div>
+<div id="census-tract-ct-readi" class="section level3" number="3.1.2">
+<h3><span class="header-section-number">3.1.2</span> Census tract (CT)
+ReADI</h3>
 <p><br></p>
+<p>This section applies the same ReADI procedure at the census tract
+level. The table below shows the tract-specific factor loadings and
+scoring coefficients. The code that follows constructs the 17
+tract-level component variables, applies population weighting, fits the
+factor model, and produces both the raw and nationally ranked ReADI
+values for census tracts.</p>
 <div class="row">
-<div class="col-md-3">
+<div class="col-md-4">
+
+</div>
+<div class="col-md-4">
+<div style="margin:16px 0">
+<center>
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1403">
+<h4 class="text-white">
+<p>CT Weights</p>
+</h4>
+</button>
+</center>
+<div id="code1403" class="collapse">
 <table>
 <thead>
 <tr class="header">
@@ -5209,33 +5960,19 @@ save(ReADI_CBG_2022, file = &quot;ReADI_CBG_2022.RData&quot;)</code></pre>
 </tbody>
 </table>
 </div>
-<div class="col-md-1">
-
 </div>
-<div class="col-md-6">
-<p>The table describes the amount of NAs which resulted from the 17
-variable calculations and which were subsequently converted to 0 and the
-weights resulting from factor analysis. The code produced several
-products, the zscore standardized 17 composite variables, a raw ReADI
-score which can be used to subset down to whichever geographical area is
-relevant for a user’s purposed and then re-scaled from 0-100, and then a
-nationally representative ADI scaled from 0-100. The
-ReADI_2022_CT_RawVars.RData file has the 17 variables prior to zscore
-them.</p>
 </div>
-<div class="col-md-2">
+<div class="col-md-4">
 
 </div>
 </div>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1323">Show
-Code</button>
-<div id="code1323" class="collapse">
-<pre class="r"><code>load(&quot;ReADI_CT_2022_Imp.RData&quot;)
-
-ReADI_CT_2022 &lt;- ReADI_CT_2022_Imp %&gt;%
-  dplyr::mutate(ReADI_CT_2022_Imp,
-    MEDFI = B19013_001,
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1417">
+Show Code
+</button>
+<div id="code1417" class="collapse">
+<pre class="r"><code>ReADI_CT_2022 &lt;- ReADI_CT_2022_Imp %&gt;%
+  dplyr::mutate(MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
     BELPL = B17017_002/B17017_001*100,
     PL150 = (C17002_005 + C17002_004 + C17002_003 + C17002_002)/C17002_001*100,
@@ -5254,54 +5991,72 @@ ReADI_CT_2022 &lt;- ReADI_CT_2022_Imp %&gt;%
     CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
     POPWT = log(B01003_001)
 ) %&gt;%
-  select(GEOID, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT
-)
+  select(GEOID, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT)
 
-# Replacing NA values resulting from 0 values back to 0. 
-colSums(is.na(ReADI_CT_2022))
-ReADI_CT_2022[is.na(ReADI_CT_2022)] &lt;- 0
+colSums(is.na(ReADI_CT_2022))</code></pre>
+<pre><code>##     GEOID     Tract    County     State     MEDFI    INCDIS     BELPL     PL150 
+##         0         0         0         0         0         0       255       198 
+##    EDU9YR HSDPNHIGH     EMPWC     UNEMP     MEDHV    MEDRNT   MEDMORT       OWN 
+##        21        21       154       153         0         0         0       255 
+##    SNGPNT     NOVEH     NOINT    NOPLUM     CROWD     POPWT 
+##       255       255       255         0       255         0</code></pre>
+<pre class="r"><code>ReADI_CT_2022[is.na(ReADI_CT_2022)] &lt;- 0
 ReADI_2022_CT_RawVars &lt;- ReADI_CT_2022
-save(ReADI_2022_CT_RawVars, file = &quot;ReADI_2022_CT_RawVars.RData&quot;)
 
 ADI_short &lt;- ReADI_CT_2022[, c(&quot;GEOID&quot;, &quot;MEDFI&quot;, &quot;INCDIS&quot;, &quot;BELPL&quot;, &quot;PL150&quot;, &quot;EDU9YR&quot;, &quot;HSDPNHIGH&quot;, &quot;EMPWC&quot;, &quot;UNEMP&quot;, &quot;MEDHV&quot;, &quot;MEDRNT&quot;, &quot;MEDMORT&quot;, &quot;OWN&quot;, &quot;SNGPNT&quot;, &quot;NOVEH&quot;, &quot;NOINT&quot;, &quot;NOPLUM&quot;, &quot;CROWD&quot;)]
 rownames(ADI_short) &lt;- ADI_short$GEOID
 ADI_short$GEOID &lt;- NULL
 
-# zscore transform
 ADI_short &lt;- as.data.frame(scale(ADI_short))
 
-# Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
-load(&quot;ReADI_2022_Wt.RData&quot;)
-load(&quot;ReADI_2022_Loadings.RData&quot;)
-identical(rownames(ADI_short), ReADI_CT_2022$GEOID)
+stopifnot(identical(rownames(ADI_short), ReADI_CT_2022$GEOID))
 adi.fa &lt;- fa(ADI_short, nfactors = 1, fm = &quot;pa&quot;, weight = ReADI_CT_2022$POPWT)
 
 # Loadings
-identical(colnames(adi.fa$residual),ReADI_2022_Loadings$Vars)
-ReADI_2022_Loadings$CT &lt;- loadings(adi.fa)[,&quot;PA1&quot;]
-save(ReADI_2022_Loadings, file = &quot;ReADI_2022_Loadings.RData&quot;)
+identical(colnames(adi.fa$residual),ReADI_2022_Loadings$Vars)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>ReADI_2022_Loadings$CT &lt;- loadings(adi.fa)[,&quot;PA1&quot;]
 
 # Weights
-identical(colnames(adi.fa$residual),ReADI_2022_Wt$Vars)
-ReADI_2022_Wt$CT &lt;- adi.fa$weights[,&quot;PA1&quot;]
-save(ReADI_2022_Wt, file = &quot;ReADI_2022_Wt.RData&quot;)
+identical(colnames(adi.fa$residual),ReADI_2022_Wt$Vars)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>ReADI_2022_Wt$CT &lt;- adi.fa$weights[,&quot;PA1&quot;]
 
-# Pulling the raw scores as the raw SDI, producing the SDI on a scale of 0-100
+# ReADI scores
 ADI &lt;- as.data.frame(adi.fa$scores)
 colnames(ADI) &lt;- c(&quot;ReADI_CT_Raw&quot;)
-identical(rownames(ADI), ReADI_CT_2022$GEOID)
+stopifnot(identical(rownames(ADI), ReADI_CT_2022$GEOID))
 ADI$ReADI_CT_NR &lt;- round(percent_rank(ADI$ReADI_CT_Raw)*100, 0)
 ADI$GEOID &lt;- rownames(ADI)
 ReADI_CT_2022 &lt;- plyr::join(ReADI_CT_2022, ADI, by = &quot;GEOID&quot;)
-save(ReADI_CT_2022, file = &quot;ReADI_CT_2022.RData&quot;)</code></pre>
+save(ReADI_CT_2022, file = &quot;ReADI_CT_2022.RData&quot;)
+write.csv(ReADI_CT_2022, file = &quot;ReADI_CT_2022.csv&quot;)</code></pre>
 </div>
 </div>
-<blockquote>
-<p>C</p>
-</blockquote>
+</div>
+<div id="county-c-readi" class="section level3" number="3.1.3">
+<h3><span class="header-section-number">3.1.3</span> County (C)
+ReADI</h3>
 <p><br></p>
+<p>Finally, the ReADI procedure is estimated at the county level. The
+table below displays the county-level factor loadings and scoring
+coefficients. The code below generates the component variables, applies
+analytic weights, fits the county factor model, and computes raw and
+nationally ranked ReADI scores for all counties.</p>
 <div class="row">
-<div class="col-md-3">
+<div class="col-md-4">
+
+</div>
+<div class="col-md-4">
+<div style="margin:16px 0">
+<center>
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1524">
+<h4 class="text-white">
+<p>C Weights</p>
+</h4>
+</button>
+</center>
+<div id="code1524" class="collapse">
 <table>
 <thead>
 <tr class="header">
@@ -5399,33 +6154,19 @@ save(ReADI_CT_2022, file = &quot;ReADI_CT_2022.RData&quot;)</code></pre>
 </tbody>
 </table>
 </div>
-<div class="col-md-1">
-
 </div>
-<div class="col-md-6">
-<p>The table describes the amount of NAs which resulted from the 17
-variable calculations and which were subsequently converted to 0 and the
-weights resulting from factor analysis. The code produced several
-products, the zscore standardized 17 composite variables, a raw ReADI
-score which can be used to subset down to whichever geographical area is
-relevant for a user’s purposed and then re-scaled from 0-100, and then a
-nationally representative ADI scaled from 0-100. The
-ReADI_2022_C_RawVars.RData file has the 17 variables prior to zscore
-them.</p>
 </div>
-<div class="col-md-2">
+<div class="col-md-4">
 
 </div>
 </div>
 <div style="margin:16px 0">
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1488">Show
-Code</button>
-<div id="code1488" class="collapse">
-<pre class="r"><code>load(&quot;ReADI_C_2022_Imp.RData&quot;)
-
-ReADI_C_2022 &lt;- ReADI_C_2022_Imp %&gt;%
-  dplyr::mutate(ReADI_C_2022_Imp,
-    MEDFI = B19013_001,
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1532">
+Show Code
+</button>
+<div id="code1532" class="collapse">
+<pre class="r"><code>ReADI_C_2022 &lt;- ReADI_C_2022_Imp %&gt;%
+  dplyr::mutate(MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
     BELPL = B17017_002/B17017_001*100,
     PL150 = (C17002_005 + C17002_004 + C17002_003 + C17002_002)/C17002_001*100,
@@ -5444,51 +6185,66 @@ ReADI_C_2022 &lt;- ReADI_C_2022_Imp %&gt;%
     CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
     POPWT = log(B01003_001)
 ) %&gt;%
-  select(GEOID, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT, 
-)
+  select(GEOID, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT)
 
-# Replacing NA values resulting from 0 values back to 0. 
-colSums(is.na(ReADI_C_2022))
-ReADI_2022_C_RawVars &lt;- ReADI_C_2022
-save(ReADI_2022_C_RawVars, file = &quot;ReADI_2022_C_RawVars.RData&quot;)
+colSums(is.na(ReADI_C_2022))</code></pre>
+<pre><code>##     GEOID    County     State     MEDFI    INCDIS     BELPL     PL150    EDU9YR 
+##         0         0         0         0         0         0         0         0 
+## HSDPNHIGH     EMPWC     UNEMP     MEDHV    MEDRNT   MEDMORT       OWN    SNGPNT 
+##         0         0         0         0         0         0         0         0 
+##     NOVEH     NOINT    NOPLUM     CROWD     POPWT 
+##         0         0         0         0         0</code></pre>
+<pre class="r"><code>ReADI_2022_C_RawVars &lt;- ReADI_C_2022
 
 ADI_short &lt;- ReADI_C_2022[, c(&quot;GEOID&quot;, &quot;MEDFI&quot;, &quot;INCDIS&quot;, &quot;BELPL&quot;, &quot;PL150&quot;, &quot;EDU9YR&quot;, &quot;HSDPNHIGH&quot;, &quot;EMPWC&quot;, &quot;UNEMP&quot;, &quot;MEDHV&quot;, &quot;MEDRNT&quot;, &quot;MEDMORT&quot;, &quot;OWN&quot;, &quot;SNGPNT&quot;, &quot;NOVEH&quot;, &quot;NOINT&quot;, &quot;NOPLUM&quot;, &quot;CROWD&quot;)]
 rownames(ADI_short) &lt;- ADI_short$GEOID
 ADI_short$GEOID &lt;- NULL
 
-# zscore transform
 ADI_short &lt;- as.data.frame(scale(ADI_short))
 
-# Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
-load(&quot;ReADI_2022_Wt.RData&quot;)
-load(&quot;ReADI_2022_Loadings.RData&quot;)
-identical(rownames(ADI_short), ReADI_C_2022$GEOID)
+stopifnot(identical(rownames(ADI_short), ReADI_C_2022$GEOID))
 adi.fa &lt;- fa(ADI_short, nfactors = 1, fm = &quot;pa&quot;, weight = ReADI_C_2022$POPWT)
 
 # Loadings
-identical(colnames(adi.fa$residual),ReADI_2022_Loadings$Vars)
-ReADI_2022_Loadings$C &lt;- loadings(adi.fa)[,&quot;PA1&quot;]
+identical(colnames(adi.fa$residual),ReADI_2022_Loadings$Vars)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>ReADI_2022_Loadings$C &lt;- loadings(adi.fa)[,&quot;PA1&quot;]
 save(ReADI_2022_Loadings, file = &quot;ReADI_2022_Loadings.RData&quot;)
 write.csv(ReADI_2022_Loadings, file = &quot;ReADI_2022_Loadings.csv&quot;)
 
 # weights
-identical(colnames(adi.fa$residual),ReADI_2022_Wt$Vars)
-ReADI_2022_Wt$C &lt;- adi.fa$weights[,&quot;PA1&quot;]
+identical(colnames(adi.fa$residual),ReADI_2022_Wt$Vars)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>ReADI_2022_Wt$C &lt;- adi.fa$weights[,&quot;PA1&quot;]
 save(ReADI_2022_Wt, file = &quot;ReADI_2022_Wt.RData&quot;)
 write.csv(ReADI_2022_Wt, file = &quot;ReADI_2022_Wt.csv&quot;)
 
-# Pulling the raw scores as the raw SDI, producing the SDI on a scale of 0-100
+# ReADI Scores
 ADI &lt;- as.data.frame(adi.fa$scores)
 colnames(ADI) &lt;- c(&quot;ReADI_C_Raw&quot;)
-identical(rownames(ADI), ReADI_C_2022$GEOID)
+stopifnot(identical(rownames(ADI), ReADI_C_2022$GEOID))
 ADI$ReADI_C_NR &lt;- round(percent_rank(ADI$ReADI_C_Raw)*100, 0)
 ADI$GEOID &lt;- rownames(ADI)
 ReADI_C_2022 &lt;- plyr::join(ReADI_C_2022, ADI, by = &quot;GEOID&quot;)
-save(ReADI_C_2022, file = &quot;ReADI_C_2022.RData&quot;)</code></pre>
+save(ReADI_C_2022, file = &quot;ReADI_C_2022.RData&quot;)
+write.csv(ReADI_C_2022, file = &quot;ReADI_C_2022.csv&quot;)</code></pre>
 </div>
 </div>
 <p><br><br></p>
 </div>
+</div>
+</div>
+<div id="summary" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Summary</h1>
+<p><br></p>
+<p>At this stage, ReADI has been fully constructed for all three
+geographic levels. For each level, the workflow produces the calculated
+scoring coefficients, raw ReADI scores, nationally ranked (0–100) ReADI
+scores, and the corresponding factor loadings and weights. These outputs
+form the basis for all subsequent mapping, validation, and comparison
+analyses. Because all steps are explicitly documented and reproducible,
+users can subset geographic levels, modify components, or re-estimate
+the factor model for alternative datasets as needed.</p>
 </div>
 
 
