@@ -1,0 +1,68 @@
+name: ReADI renv + render check
+
+on:
+  push:
+    paths:
+      - "2018-2022/**"
+      - ".github/workflows/readi-2022.yml"
+  pull_request:
+    paths:
+      - "2018-2022/**"
+      - ".github/workflows/readi-2022.yml"
+
+jobs:
+  readi-check:
+    name: R ${{ matrix.r-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        r-version: ["4.5.0"]
+
+    env:
+      RENV_CONFIG_INSTALL_FROM_SOURCE: "never"
+      R_KEEP_PKG_SOURCE: "no"
+      CENSUS_API_KEY: ${{ secrets.CENSUS_API_KEY }}
+      
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Pandoc
+        uses: r-lib/actions/setup-pandoc@v2
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r-version }}
+          use-public-rspm: true
+
+      # ----- OS-specific system libraries -----
+
+      - name: Install system dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libudunits2-dev libgdal-dev libgeos-dev libproj-dev
+
+      - name: Install system dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install udunits gdal proj geos
+
+      # Windows usually has CRAN binaries for units/sf; no extra system deps here
+
+      # ----- R/renv steps -----
+
+      - name: Install renv
+        run: Rscript -e "install.packages('renv', repos = 'https://cloud.r-project.org')"
+
+      - name: Restore renv library
+        working-directory: 2018-2022
+        run: Rscript -e "renv::restore(prompt = FALSE)"
+
+      - name: Render ReADI analysis
+        working-directory: 2018-2022
+        run: Rscript -e "rmarkdown::render('ReADI_2022_Creation.Rmd')"
