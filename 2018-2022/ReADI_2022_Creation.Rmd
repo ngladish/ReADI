@@ -5,15 +5,15 @@ date: "<center>`r format(Sys.time(), '%d %B, %Y')`</center>"
 output:
   html_document:
     includes:
-      after_body: "templates/NG_footer.html"
-      in_header: "templates/header.html"
+      after_body: "../templates/NG_footer.html"
+      in_header: "../templates/header.html"
     toc: true
     toc_depth: 2
     number_sections: true
     toc_float: 
       collapsed: true
       smooth_scroll: true
-    css: "templates/bootstrap.css"
+    css: "../templates/bootstrap.css"
     self_contained: true
 ---
 
@@ -86,37 +86,49 @@ div.card {
 ```
 
 ```{r setup, include=FALSE}
-# Warn if R version is older than what was used for the analysis
+## Warn if R version is older than what was used for this analysis
 if (getRversion() < "4.5.0") {
   warning(
-    "This analysis was developed under R 4.5.0. ",
+    "This analysis was developed under R 4.5.0 ",
     "You are using R ", as.character(getRversion()),
-    ". If you see package errors, consider upgrading to R 4.5.0."
+    ". If you see package errors, consider upgrading to at least R 4.5.0"
   )
 }
 
-# Check for required packages and fail with a clear message if missing
+## Check for required packages and fail with a clear message if missing
 needed_pkgs <- c(
-  "sf", "s2", "tidyverse", "dplyr", "ggplot2",
-  "corrplot", "MBESS", "Metrics", "plyr", "tidyr", "tibble"
-  # add or remove package names here if needed
+  "tidyverse",
+  "censusapi",
+  "reshape2",
+  "plyr",
+  "SciViews",
+  "readxl",
+  "tidycensus",
+  "psych",
+  "tigris",
+  "spdep",
+  "statar",
+  "dbplyr"
 )
 
-missing_pkgs <- needed_pkgs[!vapply(needed_pkgs, requireNamespace, logical(1), quietly = TRUE)]
+missing_pkgs <- needed_pkgs[
+  !vapply(needed_pkgs, requireNamespace, logical(1), quietly = TRUE)
+]
 
 if (length(missing_pkgs) > 0) {
   msg <- paste0(
     "The following R packages are missing: ",
     paste(missing_pkgs, collapse = ", "), ".\n\n",
-    "Please run renv::restore() in the project root\n",
-    "  (Gladish_2025_ReADI_Creation)\n",
+    "Please run renv::restore() in the project root for this year\n",
     "before knitting this document.\n\n",
-    "If renv::restore() fails with errors about 's2', 'cmake', or 'abseil',\n",
-    "see the 'R and system requirements' section of the README for the\n",
-    "one-time system commands to run on your operating system."
+    "If renv::restore() fails, see the README for this year\n",
+    "for operating system–specific setup instructions."
   )
   stop(msg, call. = FALSE)
 }
+
+## Global options
+options(tigris_use_cache = TRUE)
 ```
 
 # Introduction

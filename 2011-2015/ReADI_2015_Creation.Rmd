@@ -84,6 +84,52 @@ div.card {
   }
 ```
 
+```{r setup, include=FALSE}
+## Warn if R version is older than what was used for this analysis
+if (getRversion() < "4.5.0") {
+  warning(
+    "This analysis was developed under R 4.5.0 ",
+    "You are using R ", as.character(getRversion()),
+    ". If you see package errors, consider upgrading to at least R 4.5.0"
+  )
+}
+
+## Check for required packages and fail with a clear message if missing
+needed_pkgs <- c(
+  "tidyverse",
+  "censusapi",
+  "reshape2",
+  "plyr",
+  "SciViews",
+  "readxl",
+  "tidycensus",
+  "psych",
+  "tigris",
+  "spdep",
+  "statar",
+  "dbplyr"
+)
+
+missing_pkgs <- needed_pkgs[
+  !vapply(needed_pkgs, requireNamespace, logical(1), quietly = TRUE)
+]
+
+if (length(missing_pkgs) > 0) {
+  msg <- paste0(
+    "The following R packages are missing: ",
+    paste(missing_pkgs, collapse = ", "), ".\n\n",
+    "Please run renv::restore() in the project root for this year\n",
+    "before knitting this document.\n\n",
+    "If renv::restore() fails, see the README for this year\n",
+    "for operating system–specific setup instructions."
+  )
+  stop(msg, call. = FALSE)
+}
+
+## Global options
+options(tigris_use_cache = TRUE)
+```
+
 # Brief Overview of ADI and ReADI
 ***
 <br>
