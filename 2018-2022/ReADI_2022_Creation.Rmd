@@ -910,6 +910,7 @@ CT_2022_Imputed <- impute_vars(
   level_label = "CT")
 ReADI_CT_2022_Imp <- ReADI_2022_CT_Raw[, !names(ReADI_2022_CT_Raw) %in% vars]
 ReADI_CT_2022_Imp <- plyr::join(ReADI_CT_2022_Imp, CT_2022_Imputed, by = "GEOID")
+
 ```
 :::
 ::::
