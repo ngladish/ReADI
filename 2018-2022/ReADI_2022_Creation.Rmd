@@ -346,7 +346,6 @@ To account for this, we transform population size using the natural log of the t
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code338">Show Code</button>
-
 ::: {#code338 .collapse}
 ```{r, results = F, message = F}
 library(tidyverse)
@@ -405,7 +404,6 @@ Below are the final numbers of areas at each geography:
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code397">Show Code</button>
-
 ::: {#code397 .collapse}
 ```{r}
 if (!nzchar(Sys.getenv("CENSUS_API_KEY"))) {
@@ -567,7 +565,6 @@ Some geographic units have no residents or correspond to areas such as open wate
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code559">Show Code</button>
-
 ::: {#code559 .collapse}
 ```{r}
 ReADI_2022_CBG_Raw <- ReADI_2022_CBG_Raw[!ReADI_2022_CBG_Raw$B01003_001 == 0,] 
@@ -585,7 +582,7 @@ ReADI_2022_C_Raw <- ReADI_2022_C_Raw[!ReADI_2022_C_Raw$B01003_001 == 0,]
 
 <br>
 
-Table 1 below summarizes the extent of missing data for variables with incomplete information at each geographic level. Only a subset of components have any missing values, and for most variables the proportion of missingness is small.
+Table below summarizes the extent of missing data for variables with incomplete information at each geographic level. Only a subset of components have any missing values, and for most variables the proportion of missingness is small.
 
 ::::: row
 ::: col-md-6
@@ -603,23 +600,10 @@ Table 1 below summarizes the extent of missing data for variables with incomplet
 
 <br>
 
-Table 2 lists the 12 counties with missing values on at least one component variable. These counties are almost entirely very low population areas, which appears to be the primary source of ACS nonreporting. Kalawao County in Hawaii is a notable example: it is an isolated, historically protected community with a very small resident population, and several ACS estimates are suppressed or unavailable for this county.
+Table below lists the 12 counties with missing values on at least one component variable. These counties are almost entirely very low population areas, which appears to be the primary source of ACS nonreporting. Kalawao County in Hawaii is a notable example: it is an isolated, historically protected community with a very small resident population, and several ACS estimates are suppressed or unavailable for this county.
 
 :::: {style="margin:16px 0"}
-<center>
-
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code569">
-
-<h4 class="text-white">
-
-County NAs
-
-</h4>
-
-</button>
-
-</center>
-
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code569"><h4 class="text-white">County NAs</h4></button></center>
 ::: {#code569 .collapse}
 | County, ST | Population | B19013_001 | B25064_001 | B25077_001 | B25088_002 |
 |:-----------|:-----------|:-----------|:-----------|:-----------|:-----------|
@@ -726,12 +710,7 @@ We do not force additional neighbors (for example, by using large snapping toler
 The following code defines the reusable functions used for spatial imputation at each geography:
 
 :::: {style="margin:16px 0"}
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code723">
-
-Imputation Function
-
-</button>
-
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code723">Imputation Function</button>
 ::: {#code723 .collapse}
 ```{r}
 impute.fun <- function(data, var, shape) {
@@ -845,7 +824,7 @@ impute_vars <- function(data, shape, vars, level_label = "") {
 
 > Block group (CBG) imputation
 
-At the census block group level, spatial imputation is applied to the subset of variables with missing values. Only originally missing values are replaced; observed values are retained unchanged. Table below summarizes the number and proportion of missing values for each imputed variable before and after CBG-level imputation.
+At the census block group (CBG) level, spatial imputation is applied to the subset of variables that contain missing values. Only originally missing entries are replaced; observed values are retained unchanged in the final dataset. However, because the imputation model generates predicted (i.e., “imputed”) values for all CBGs during fitting, we can evaluate performance by comparing the model’s predicted values against the observed (non-missing) values. The table below summarizes, for each imputed variable, (1) the correlation between predicted (imputed) and observed values across all CBGs with observed data, (2) the significance of that correlation, and (3) the number of missing values remaining after imputation.
 
 ::::: row
 ::: col-md-6
@@ -865,7 +844,6 @@ The code below runs the imputation for block groups and produces the post-imputa
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code857">Show Code</button>
-
 ::: {#code857 .collapse}
 ```{r, warning = FALSE}
 vars <- c("B19013_001", "B25064_001", "B25077_001", "B25088_002")
@@ -880,7 +858,7 @@ ReADI_CBG_2022_Imp <- plyr::join(ReADI_CBG_2022_Imp, CBG_2022_Imputed, by = "GEO
 :::
 ::::
 
-> CT
+> Census Tract (CT)
 
 The same spatial imputation strategy is applied at the census tract and county levels, using tract and county geometries and state-specific neighbor lists. For each geography, only originally missing values are imputed, and imputation proceeds iteratively within state until no additional units can be filled based on their neighbors.
 
@@ -900,7 +878,6 @@ The same spatial imputation strategy is applied at the census tract and county l
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code892">Show Code</button>
-
 ::: {#code892 .collapse}
 ```{r, warning = FALSE}
 CT_2022_Imputed <- impute_vars(
@@ -910,12 +887,11 @@ CT_2022_Imputed <- impute_vars(
   level_label = "CT")
 ReADI_CT_2022_Imp <- ReADI_2022_CT_Raw[, !names(ReADI_2022_CT_Raw) %in% vars]
 ReADI_CT_2022_Imp <- plyr::join(ReADI_CT_2022_Imp, CT_2022_Imputed, by = "GEOID")
-
 ```
 :::
 ::::
 
-> C
+> Counties
 
 The same spatial imputation strategy is applied at the census tract and county levels, using tract and county geometries and state-specific neighbor lists. For each geography, only originally missing values are imputed, and imputation proceeds iteratively within state until no additional units can be filled based on their neighbors.
 
@@ -935,7 +911,6 @@ The same spatial imputation strategy is applied at the census tract and county l
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code926">Show Code</button>
-
 ::: {#code926 .collapse}
 ```{r, warning = FALSE}
 ## Remove DC for spatial imputation
@@ -1000,7 +975,6 @@ Four census tracts remain with missing values after imputation. Table below summ
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855">
 <h4 class="text-white">CT NAs</h4></button>
 </center>
-
 ::: {#code855 .collapse}
 | GEOID | CT | Location | Population | CT Information |
 |:--------------|:--------------|:--------------|:--------------|:--------------|
@@ -1030,11 +1004,7 @@ ReADI_CT_2022_Imp <- ReADI_CT_2022_Imp[!ReADI_CT_2022_Imp$GEOID %in% CT_Missing$
 Thirty-two census block groups remain with missing values after block group level imputation. Of these, four are located within the census tracts removed above, and an additional three correspond to national parks or similar areas that are not appropriate for inclusion in a residential deprivation index. Table below lists these CBGs and their characteristics using [Census Reporter](https://censusreporter.org/profiles/):
 
 :::: {style="margin:16px 0"}
-<center>
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1023">
-<h4 class="text-white">CBG NAs</h4></button>
-</center>
-
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1023"><h4 class="text-white">CBG NAs</h4></button></center>
 ::: collapse
 | GEOID | CBG.CT | Location | Population | CT Information | Removed |
 |:-----------|:-----------|:-----------|:-----------|:-----------|:-----------|
@@ -1077,7 +1047,6 @@ Block groups nested in removed tracts and clearly non-residential CBGs are dropp
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1087">Show Code</button>
-
 ::: {#code1087 .collapse}
 ```{r}
 bad_len <- which(is.na(ReADI_CBG_2022_Imp$GEOID) | nchar(ReADI_CBG_2022_Imp$GEOID) != 12)
@@ -1122,7 +1091,6 @@ The remaining CBGs with missing values after the steps above are imputed using t
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1129">Show Code</button>
-
 ::: {#code1129 .collapse}
 ```{r}
 impute_CBG_geo <- CBG_Missing[!CBG_Missing$GEOID %in% CBG_rm,]
@@ -1157,20 +1125,7 @@ The steps below describe how ReADI is constructed at each geographic level (coun
 <strong><strong>1. Construct the 17 component variables:</strong></strong> Using the imputed ACS data for each geography, we compute the 17 deprivation-related component variables used in ReADI. These variables represent domains such as income, education, employment, housing cost burden, household composition, and infrastructure access. Table below summarizes each variable, the corresponding ACS table or cell, and the formula used in its construction.
 
 :::: {style="margin:16px 0"}
-<center>
-
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1111">
-
-<h4 class="text-white">
-
-CBG ReADI Variables
-
-</h4>
-
-</button>
-
-</center>
-
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1111"><h4 class="text-white">CBG ReADI Variables</h4></button></center>
 ::: {#code1111 .collapse}
 | Census Variable | Name | Table |   |
 |------------------|------------------|------------------|:----------------:|
@@ -1228,20 +1183,7 @@ Below are the factor weights and scoring coefficients estimated for block groups
 :::
 ::::: col-md-4
 :::: {style="margin:16px 0"}
-<center>
-
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1177">
-
-<h4 class="text-white">
-
-CBG Weights
-
-</h4>
-
-</button>
-
-</center>
-
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1177"><h4 class="text-white">CBG Weights</h4></button></center>
 ::: {#code1177 .collapse}
 | Variable  | NAs | Weights |
 |:----------|:----|--------:|
@@ -1272,7 +1214,6 @@ CBG Weights
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1296">Show Code</button>
-
 ::: {#code1296 .collapse}
 ```{r}
 ReADI_CBG_2022 <- ReADI_CBG_2022_Imp %>%
@@ -1300,7 +1241,6 @@ ReADI_CBG_2022 <- ReADI_CBG_2022_Imp %>%
 # Replacing NA values resulting from 0 values back to 0. 
 colSums(is.na(ReADI_CBG_2022))
 ReADI_CBG_2022[is.na(ReADI_CBG_2022)] <- 0
-ReADI_2022_CBG_RawVars <- ReADI_CBG_2022
 
 ADI_short <- ReADI_CBG_2022[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
 rownames(ADI_short) <- ADI_short$GEOID
@@ -1338,6 +1278,8 @@ write.csv(ReADI_CBG_2022, file = "ReADI_CBG_2022.csv")
 :::
 ::::
 
+<br><br>
+
 ### Census tract (CT) ReADI
 
 <br>
@@ -1349,20 +1291,7 @@ This section applies the same ReADI procedure at the census tract level. The tab
 :::
 ::::: col-md-4
 :::: {style="margin:16px 0"}
-<center>
-
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1403">
-
-<h4 class="text-white">
-
-CT Weights
-
-</h4>
-
-</button>
-
-</center>
-
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1403"><h4 class="text-white">CT Weights</h4></button></center>
 ::: {#code1403 .collapse}
 | Variable  | NAs | Weights |
 |:----------|:----|--------:|
@@ -1420,7 +1349,6 @@ ReADI_CT_2022 <- ReADI_CT_2022_Imp %>%
 
 colSums(is.na(ReADI_CT_2022))
 ReADI_CT_2022[is.na(ReADI_CT_2022)] <- 0
-ReADI_2022_CT_RawVars <- ReADI_CT_2022
 
 ADI_short <- ReADI_CT_2022[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
 rownames(ADI_short) <- ADI_short$GEOID
@@ -1464,20 +1392,7 @@ Finally, the ReADI procedure is estimated at the county level. The table below d
 :::
 ::::: col-md-4
 :::: {style="margin:16px 0"}
-<center>
-
-<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1524">
-
-<h4 class="text-white">
-
-C Weights
-
-</h4>
-
-</button>
-
-</center>
-
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1524"><h4 class="text-white">C Weights</h4></button></center>
 ::: {#code1524 .collapse}
 | Variable  | NAs | Weights |
 |:----------|:----|--------:|
@@ -1508,7 +1423,6 @@ C Weights
 
 :::: {style="margin:16px 0"}
 <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1532">Show Code</button>
-
 ::: {#code1532 .collapse}
 ```{r}
 ReADI_C_2022 <- ReADI_C_2022_Imp %>%
@@ -1534,7 +1448,6 @@ ReADI_C_2022 <- ReADI_C_2022_Imp %>%
   select(GEOID, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT)
 
 colSums(is.na(ReADI_C_2022))
-ReADI_2022_C_RawVars <- ReADI_C_2022
 
 ADI_short <- ReADI_C_2022[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
 rownames(ADI_short) <- ADI_short$GEOID

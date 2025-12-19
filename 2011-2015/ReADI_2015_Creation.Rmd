@@ -16,6 +16,7 @@ output:
     css: "../templates/bootstrap.css"
     self_contained: true
 ---
+
 <br><br>
 
 ```{css, echo = FALSE}
@@ -130,31 +131,81 @@ if (length(missing_pkgs) > 0) {
 options(tigris_use_cache = TRUE)
 ```
 
+
 # Brief Overview of ADI and ReADI
-***
+
+------------------------------------------------------------------------
+
 <br>
 
 The Area Deprivation Index (ADI) was originally developed by Singh (2003) as a factor-based measure of area-level socioeconomic deprivation using 17 census-derived indicators. Kind et al. (2014, 2018) later operationalized the ADI for broader use through the Neighborhood Atlas, providing block-group level scores for multiple ACS periods.
 
 However, subsequent work has shown that the Neighborhood Atlas ADI (NA-ADI) implementation has several methodological limitations (e.g., reuse of 1990 factor weights on newer data, application of weights to unstandardized variables, and reliance on outdated variable thresholds). These issues affect reproducibility and interpretability.
 
-The Reproducible Area Deprivation Index (ReADI) is a fully documented re-implementation of the ADI that:
-- Standardizes all input variables and derives factor scores directly from the factor analysis output.
-- Re-estimates factor weights for each ACS period using a one-factor model with population weights.
-- Modernizes key variable definitions and thresholds (e.g., education and income disparity) to reflect current socioeconomic conditions.
-- Incorporates population size in the factor model to account for highly skewed area population distributions.
+The Reproducible Area Deprivation Index (ReADI) is a fully documented re-implementation of the ADI that: - Standardizes all input variables and derives factor scores directly from the factor analysis output. - Re-estimates factor weights for each ACS period using a one-factor model with population weights. - Modernizes key variable definitions and thresholds (e.g., education and income disparity) to reflect current socioeconomic conditions. - Incorporates population size in the factor model to account for highly skewed area population distributions.
 
 For full methodological details, see the main ReADI methods documentation and [website](https://sepi.stanford.edu/available-socioeconomic-position-indices/reproducible-area-deprivation-index-readi).
 
+**Note on telecommunications variable (2015-specific):** One of the original ADI inputs, households without telephone service, is now substantively outdated. For contemporary implementations, this indicator should be updated to reflect households without internet access, which better captures modern connectivity-related deprivation. However, because the 2015 ReADI release was used for a direct, like-for-like comparison with the Neighborhood Atlas ADI in our JAMA Network Open paper, this particular version retains the telephone service variable for consistency with that benchmark. In all non-comparison (forward) releases, we replace telephone service with internet access where feasible and document the substitution.
+
 # ReADI Preparation
-***
+
+------------------------------------------------------------------------
+
+The steps below describe how ReADI is constructed at each geographic level (county, census tract, and census block group). Although the same procedure is applied across all three geographies, the models are estimated independently within each level so that the resulting loadings and scores are geographically appropriate.
+
+<strong><strong>1. Construct the 17 component variables:</strong></strong> Using the imputed ACS data for each geography, we compute the 17 deprivation-related component variables used in ReADI. These variables represent domains such as income, education, employment, housing cost burden, household composition, and infrastructure access. Table below summarizes each variable, the corresponding ACS table or cell, and the formula used in its construction.
+
+:::: {style="margin:16px 0"}
+<center>
+
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1111">
+
+<h4 class="text-white">
+
+ReADI Variables
+
+</h4>
+
+</button>
+
+</center>
+
+::: {#code1111 .collapse}
+| Census Variable | Name | Table |   |
+|------------------------|----------------|----------------|:--------------:|
+| Median family income, \$ | MEDFI | B19013 | $001$ |
+| Income disparity$^a$ | INCDIS | B19001 | $ln({\sum(002-004)+1\over\sum(014-017)+1}x100)$\| |
+| Families below poverty level, % | BELPL | B17017 | ${002\over001}x100$ |
+| Population below 150% of the poverty threshold, % | PL150 | C17002 | ${\sum(002-005)\over 001}x100$ |
+| Population ≥25y with \< a high school diploma, % | EDU9YR | B15003 | ${\sum(002-016)\over 001}x100$ |
+| Population ≥25y with at least a bachelor's degree, % | HSDPNHIGH | B15003 | ${\sum(022-025)\over 001}x100$ |
+| Employed persons ≥16y in white-collar occupations, % | EMPWC | C24010 | ${\sum(003,027,039,063)\over 001}x100$ |
+| Civilian labor force population ≥16 y unemployed, % | UNEMP | B23025 | ${005\over003}x100$ |
+| Median home value, \$ | MEDHV | B25077 | $001$ |
+| Median gross rent, \$ | MEDRNT | B25064 | $001$ |
+| Median monthly mortgage, \$ | MEDMORT | B25088 | $002$ |
+| Owner-occupied housing units, % | OWN | B25003 | ${002\over001}x100$ |
+| Single-parent households with children \<18y, % | SNGPNT | B11005 | ${\sum(006-007)\over 001}x100$ |
+| Households without a motor vehicle, % | NOVEH | B25044 | ${\sum(010,003)\over 001}x100$ |
+| Households without telephone, % | NOINT | B25043 | ${\sum(007,016)\over 001}x100$ |
+| Occupied housing units without complete plumbing, % | NOPLUM | B25049 | $ln({\sum(004,007)+1\over001+1}x100)$ \| |
+| Households with more than 1 person per room, % | CROWD | B25014 | ${\sum(005-007,011-013)\over 001}x100$ |
+
+<sup>$^a$ Income disparity in 2015 was defined as the log of 100×ratio of number of households with \<\$20,000 income to number of households with ≥\$100,000 income.</sup>
+:::
+::::
 
 > Libraries
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code294">Show Code</button>
-  <div id="code294" class="collapse">
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code294">
 
+Show Code
+
+</button>
+
+::: {#code294 .collapse}
 ```{r, results = F, message = F}
 library(tidyverse)
 library(censusapi)
@@ -174,60 +225,56 @@ library(statar)
 ```{r}
 sessionInfo()
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
 ## Retrieving 2011-2015 5-Year ACS
-***
 
-> Obtaining Census Key
+------------------------------------------------------------------------
 
-In order to obtain the census API data you are required to obtain a census key from [here](https://api.census.gov/data/key_signup.html).
+<br>
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code339">Show Code</button>
-  <div id="code399" class="collapse">
+Note: Puerto Rico was removed at the outset because key component inputs—specifically the plumbing indicators—are systematically missing for all Puerto Rico geographies (county/tract/block group). With no observed values in Puerto Rico for those variables, the spatial imputation model has nothing to “anchor” to within Puerto Rico, and borrowing information from the nearest mainland geographies is not appropriate given Puerto Rico’s geographic separation and distinct housing/infrastructure context. Keeping Puerto Rico in the analytic universe therefore creates two problems as it can destabilize or distort the imputation step (by forcing the method to handle a fully-missing region with no valid neighbor structure). Removing Puerto Rico up front avoids introducing imputation artifacts and ensures the factor model and scoring are estimated on a consistent, fully-observed set of geographies; Puerto Rico can be handled separately with a tailored approach if/when compatible input data are available.
 
-```{r, eval = F}
-if (identical(Sys.getenv("CENSUS_API_KEY") != "", F)) {
+> Pulling Variables Required
+
+<br>
+
+In this section we obtain the ACS 2018–2022 5-year estimates for all variables used to construct ReADI. We work at three geographic levels: counties, census tracts, and census block groups. Definitions of these geographic units are provided in the [U.S. Census Bureau documentation](https://www2.census.gov/geo/pdfs/reference/GARM/Ch10GARM.pdf).
+
+Accessing ACS data via the Census API requires an API key, which can be requested from the [Census Bureau](https://api.census.gov/data/key_signup.html). Once you receive your key, install it in your R environment as the *CENSUS_API_KEY* environment variable (for example, by adding it to *\~/.Renviron* or a project *.Renviron*) and do not hard-code the key directly in shared code.
+
+The code that follows pulls the required ACS variables for counties, census tracts, and census block groups using the Census API and saves them as R objects for use in later steps.
+
+Below are the final numbers of areas at each geography:
+
+::::: row
+::: col-md-4
+| Area   | Amount  |
+|:-------|:--------|
+| CBG    | 217,739 |
+| CT     | 73,056  |
+| County | 3,142   |
+:::
+
+::: col-md-8
+:::
+:::::
+
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code357">Show Code</button>
+::: {#code357 .collapse}
+```{r}
+if (!nzchar(Sys.getenv("CENSUS_API_KEY"))) {
   stop(
     "Census API key not found.\n",
-    "Please set the CENSUS_API_KEY environment variable before running this document.\n"
-  )
-}
-states <- setdiff(unique(fips_codes$state_code), c("60", "66", "69", "74", "78")) # Removing US territories
-```
-  </div>
-</div>
-  
-<br><br>
+    "Please set the CENSUS_API_KEY environment variable (e.g. in .Renviron) ",
+    "before running this document.\n")}
 
-### Pulling Variables Required
-***
+states <- setdiff(unique(fips_codes$state_code), c("60", "66", "69", "74", "78", "72")) # Removing US territories and PR
 
-There are some areas which have no population or are located in water etc. These should be removed so they are not influencing the imputation of other regions. More information [here](https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2020pl/TGRSHP2020PL_TechDoc_Ch4.pdf). We are pulling data from three geographies: county, census tract, and census block group. Definitions on what these are can be found in this [census documentation](https://www2.census.gov/geo/pdfs/reference/GARM/Ch10GARM.pdf).
-
-Here is the breakdown of how many of each area exist:
-
-<div class = "row">
-<div class = "col-md-4">
-|Area       |Amount   |
-|:----------|:--------|
-|CBG        |218,940  |
-|CT         |73,297   |
-|County     |3,142    |
-</div>
-
-<div class = "col-md-8">
-</div>
-</div>
-
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code357">Show Code</button>
-  <div id="code357" class="collapse">
-```{r, eval = F}
 ADI_Vars <- c(
        "B01003_001E",
        "B19013_001E",
@@ -248,801 +295,679 @@ ADI_Vars <- c(
        "B25014_005E", "B25014_006E", "B25014_007E", "B25014_011E", "B25014_012E", "B25014_013E", "B25014_001E")
   
 # CBG level
-ACS_CBG <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
-   ACS_CBG <- get_acs(
+ACS_CBG <- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2015,
     geography = "block group",
-    state = states[x],
+    state = st,
     key = Sys.getenv("CENSUS_API_KEY"),
     variables = ADI_Vars)
-})))
+}))
 ACS_CBG <- dcast(ACS_CBG, GEOID + NAME ~ variable, value.var=c("estimate"))
-ReADI_CBG_2015_CBG_Raw <- ACS_CBG %>% separate(NAME, c("Block_Group", "Tract", "County", "State"), sep = ",") # 242336
-save(ReADI_CBG_2015_CBG_Raw, file = "ReADI_CBG_2015_CBG_Raw.RData")
+ReADI_2015_CBG_Raw <- ACS_CBG %>% separate(NAME, c("Block_Group", "Tract", "County", "State"), sep = ",") # 242336
 
 # census tract level
-ACS_CT <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
-   ACS_CT <- get_acs(
+ACS_CT <- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2015,
     geography = "tract",
-    state = states[x],
+    state = st,
     key = Sys.getenv("CENSUS_API_KEY"),
     variables = ADI_Vars)
-})))
-
+}))
 ACS_CT <- dcast(ACS_CT, GEOID + NAME ~ variable, value.var=c("estimate"))
-ReADI_CBG_2015_CT_Raw <- ACS_CT %>% separate(NAME, c("Tract", "County", "State"), sep = ",") # 85396
-save(ReADI_CBG_2015_CT_Raw, file = "ReADI_CBG_2015_CT_Raw.RData")
+ReADI_2015_CT_Raw <- ACS_CT %>% separate(NAME, c("Tract", "County", "State"), sep = ",") # 85396
 
 # county level
-ACS_C <- data.frame(do.call(rbind, lapply(1:length(states), function(x){
-   ACS_C <- get_acs(
+ACS_C <- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2015,
     geography = "county",
-    state = states[x],
+    state = st,
     key = Sys.getenv("CENSUS_API_KEY"),
     variables = ADI_Vars)
-})))
+}))
 
 ACS_C <- dcast(ACS_C, GEOID + NAME ~ variable, value.var=c("estimate"))
-ReADI_CBG_2015_C_Raw <- ACS_C %>% separate(NAME, c("County", "State"), sep = ",") # 3222
-save(ReADI_CBG_2015_C_Raw, file = "ReADI_CBG_2015_C_Raw.RData")
+ReADI_2015_C_Raw <- ACS_C %>% separate(NAME, c("County", "State"), sep = ",") # 3222
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
 ### Pulling Geography Measures
-***
 
-These values are required for both imputation and for visualizations involving mapping.
+------------------------------------------------------------------------
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code434">Show Code</button>
-  <div id="code434" class="collapse">
-```{r, eval = F}
-CBG_Geo <- do.call(rbind, lapply(1:length(states), function(x){
-   ADI_2015_CBG_Raw_NG <- get_acs(
+In addition to the ACS variables, we retrieve the corresponding spatial geometries for each geography (counties, census tracts, and census block groups). These geometry objects are required for both the spatial imputation procedures and for any visualizations that involve mapping ReADI values. The code in this section downloads and stores the geometry data that will be linked to the ACS variables in later steps.
+
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code434">Show Code</button>
+::: {#code434 .collapse}
+```{r}
+CBG_Geo <- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2015,
     geography = "block group",
     geometry = TRUE,
-    state = states[x],
+    state = st,
     key = Sys.getenv("CENSUS_API_KEY"),
     variables = "B01003_001")
 }))
 CBG_Geo <- CBG_Geo[!CBG_Geo$estimate == 0,] # from 242336 to 240172
 ACS_CBG_2015_Geometry <- CBG_Geo[, c("GEOID", "geometry")]
-save(ACS_CBG_2015_Geometry, file = "ACS_CBG_2015_Geometry.RData")
 
-CT_Geo <- do.call(rbind, lapply(1:length(states), function(x){
-   ADI_2015_CT_Raw_NG <- get_acs(
+CT_Geo <- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2015,
     geography = "tract",
     geometry = TRUE,
-    state = states[x],
+    state = st,
     key = Sys.getenv("CENSUS_API_KEY"),
     variables = "B01003_001")
 }))
 CT_Geo <- CT_Geo[!CT_Geo$estimate == 0,] # 85396 to 84539
 ACS_CT_2015_Geometry <- CT_Geo[, c("GEOID", "geometry")]
-save(ACS_CT_2015_Geometry, file = "ACS_CT_2015_Geometry.RData")
 
-C_Geo <- do.call(rbind, lapply(1:length(states), function(x){
-   ADI_2015_C_Raw_NG <- get_acs(
+C_Geo <- do.call(rbind, lapply(states, function(st) {
+get_acs(
     year = 2015,
     geography = "county",
     geometry = TRUE,
-    state = states[x],
+    state = st,
     key = Sys.getenv("CENSUS_API_KEY"),
     variables = "B01003_001")
 }))
 C_Geo <- C_Geo[!C_Geo$estimate == 0,] #3222 as none had 0
 ACS_C_2015_Geometry <- C_Geo[, c("GEOID", "geometry")]
-save(ACS_C_2015_Geometry, file = "ACS_C_2015_Geometry.RData")
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
+## Group Quarters & Small Populations
 
-## Group Quarters
-***
+------------------------------------------------------------------------
 
-There are areas whose populations constitute individuals who are in group quarters which consist of two main groups:
-- Institutionalized
-  - Adult correctional facilities
-  - Nursing facilities
-- Non-Institutionalizes
-  - College/University student housing
-  
-Areas whose populations consist totally of group-quartered individuals cannot have an index properly calculated since the relevancy of much of the measures are not applicable and many of the policies and interventions may not be impactful for these populations. The neighborhood ADI addresses these areas by referring to [Roux et al. (2001)](https://www.sciencedirect.com/science/article/pii/S1047279701002216) where they recommend removing areas that had 33% or more of their population living in group quarters (all types).
+<br>
 
-Unfortunately, the measures of group quarters, specifically tables B26001, B26103, and B26203 have NAs for all three geographies and so we will have to discuss and source out options accordingly.
+Some area deprivation index workflows apply suppression rules that exclude block groups with high proportions of residents in group quarters, very small populations (e.g., low total population or few housing units), or missing key ACS inputs. While these exclusions typically remove a small fraction of geographies nationally, they can disproportionately affect places such as correctional facilities, long-term care settings, college housing, and very small rural communities—settings that may be substantively important in many public health and policy applications.
+
+In ReADI, we do not automatically exclude these areas. Estimates for group-quarters–heavy or very small-population units can be less precise, but ReADI’s factor analysis is population-weighted, which substantially reduces the influence of small-population units on the estimation of factor weights and the resulting scores, while still allowing these geographies to receive values. Default suppression can also unintentionally remove precisely the settings where deprivation-related patterns may be most policy-relevant.
+
+To maximize transparency and flexibility, we provide the full reproducible code, raw factor scores, and nationally ranked ReADI scores. Users who prefer to exclude group-quarters–heavy areas, restrict to larger population units, or analyze these geographies separately can do so directly using their own analytic criteria. This design choice preserves coverage and interpretability while minimizing the impact of imprecise units on index construction.
+
+<br><br>
 
 ## Population Size
-***
 
-[Roux et al. (2001)](https://www.sciencedirect.com/science/article/pii/S1047279701002216) also recommended removing areas which had a population size < 100 or had less than 30 housing units. This is something to consider although this may remove areas which could benefit from an ADI score. That being said, those with reported populations of 0 should be removed and we will do so below. as there are census tracts with such areas which have to be removed. The amount of areas removed are detailed in the table below.
+------------------------------------------------------------------------
 
-<div class = "row">
-<div class = "col-md-4">
-|Area       |Pop = 0   |Remaining |
-|:----------|:---------|:---------|
-|CBG        |2,239     |218,940   |
-|CT         |873       |72,424    |
-|County     |0         |3,142     |
-</div>
+Some deprivation index workflows exclude areas with very small denominators (e.g., population \< 100 or fewer than 30 housing units) because ACS estimates in these units can be unstable. This is a reasonable sensitivity consideration, but applying it as a default can also remove places where an index score may still be meaningful or policy-relevant.
 
-<div class = "col-md-8">
-</div>
-</div>
+In this pipeline, we do not automatically suppress small-population areas. However, block groups with a reported population of 0 cannot support deprivation estimation and are removed prior to scoring. The number of areas removed under this rule is summarized in the table below.
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code494">Show Code</button>
-  <div id="code494" class="collapse">
-```{r, eval = F}
-ReADI_CBG_2015_CBG_Raw <- ReADI_CBG_2015_CBG_Raw[!ReADI_CBG_2015_CBG_Raw$B01003_001 == 0,] 
-save(ReADI_CBG_2015_CBG_Raw, file = "ReADI_CBG_2015_CBG_Raw.RData")
+::::: row
+::: col-md-4
+| Area   | Pop = 0 | Remaining |
+|:-------|:--------|:----------|
+| CBG    | 1,038   | 216,701   |
+| CT     | 632     | 72,424    |
+| County | 0       | 3,220     |
+:::
 
-ReADI_CBG_2015_CT_Raw <- ReADI_CBG_2015_CT_Raw[!ReADI_CBG_2015_CT_Raw$B01003_001 == 0,] 
-save(ReADI_CBG_2015_CT_Raw, file = "ReADI_CBG_2015_CT_Raw.RData")
+::: col-md-8
+:::
+:::::
 
-ReADI_CBG_2015_C_Raw <- ReADI_CBG_2015_C_Raw[!ReADI_CBG_2015_C_Raw$B01003_001 == 0,] 
-save(ReADI_CBG_2015_C_Raw, file = "ReADI_CBG_2015_C_Raw.RData")
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code494">Show Code</button>
+::: {#code494 .collapse}
+```{r}
+ReADI_2015_CBG_Raw <- ReADI_2015_CBG_Raw[!ReADI_2015_CBG_Raw$B01003_001 == 0,] 
+ReADI_2015_CT_Raw <- ReADI_2015_CT_Raw[!ReADI_2015_CT_Raw$B01003_001 == 0,] 
+ReADI_2015_C_Raw <- ReADI_2015_C_Raw[!ReADI_2015_C_Raw$B01003_001 == 0,] 
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
 ## Missing Values
-***
 
-Below is a summary of the amount of missing values among variables with missing information:
+------------------------------------------------------------------------
 
-<div class = "row">
-<div class = "col-md-6">
-|Variable       |CBG N (/%)   |CT N (/%)   |C N (/%)    |
-|:--------------|:------------|:-----------|:-----------|
-|B19013_001     |5,461 (3)    |367 (1)     |1 (<1)      |
-|B25043_001     |380 (<1)     |140 (<1)    |7 (<1)      |
-|B25043_007     |380 (<1)     |140 (<1)    |7 (<1)      |
-|B25043_016     |380 (<1)     |140 (<1)    |7 (<1)      |
-|B25064_001     |38,460 (18)  |1,387 (2)   |1 (<1)      |
-|B25077_001     |12,041 (6)   |1,332 (2)   |2 (<1)      |
-|B25088_002     |26,916 (12)  |2,241 (3)   |4 (<1)      |
-</div>
+Table below summarizes the extent of missing data for variables with incomplete information at each geographic level. Only a subset of components have any missing values, and for most variables the proportion of missingness is small.
 
-<div class = "col-md-6">
-</div>
-</div>
+::::: row
+::: col-md-6
+| Variable   | CBG N (/%)  | CT N (/%) | C N (/%) |
+|:-----------|:------------|:----------|:---------|
+| B19013_001 | 5,461 (3)   | 367 (1)   | 1 (\<1)  |
+| B25043_001 | 380 (\<1)   | 140 (\<1) | 7 (\<1)  |
+| B25043_007 | 380 (\<1)   | 140 (\<1) | 7 (\<1)  |
+| B25043_016 | 380 (\<1)   | 140 (\<1) | 7 (\<1)  |
+| B25064_001 | 38,460 (18) | 1,387 (2) | 1 (\<1)  |
+| B25077_001 | 12,041 (6)  | 1,332 (2) | 2 (\<1)  |
+| B25088_002 | 26,916 (13) | 2,241 (3) | 4 (\<1)  |
+:::
 
-<br>
+::: col-md-6
+:::
+:::::
 
-Among the missing data there were 12 counties which had NAs for one of these variables:
-
-<div style="margin:16px 0">
- <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code569"><h4 class="text-white">County NAs</h4></button></center>
-  <div id="code569" class="collapse">
-|County, ST          |Population|B19013_001|B25043_001|B25043_007|B25043_016|B25064_001|B25077_001|B25088_002|
-|:-------------------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|:---------|
-|Lonoke County, AR   |70,691    |\$53,631  |NA        |NA        |NA        |\$714     |\$126,900 |\$1,097   |
-|St. Johns County, FL|210,495   |\$66,194  |NA        |NA        |NA        |\$1,119   |\$244,400 |\$1,756   |
-|Bartow County, GA   |101,336   |\$48,893  |NA        |NA        |NA        |\$822     |\$123,800 |\$1,173   |
-|Catoosa County, GA  |65,375    |\$50,876  |NA        |NA        |NA        |\$730     |\$129,800 |\$1,141   |
-|Floyd County, GA    |96,169    |\$41,549  |NA        |NA        |NA        |\$674     |\$117,100 |\$1,133   |
-|Kalawao County, HI  |85        |\$66,250  |54        |0         |3         |\$856     |NA        |NA        |
-|Campbell County, KY |91,475    |\$54,621  |NA        |NA        |NA        |\$748     |\$150,400 |\$1,241   |
-|Storey Parish, NV   |3,929     |\$64,832  |1,767     |28        |0         |NA        |\$177,000 |\$1,348   |
-|Kenedy County, TX   |565       |\$36,438  |145       |0         |0         |\$558     |NA        |NA        |
-|King County, TX     |267       |\$63,250  |113       |0         |0         |\$743     |\$73,000  |NA        |
-|Loving County, TX   |117       |NA        |45        |0         |0         |\$871     |\$92,500  |NA        |
-|Portage County, WI  |70,432    |\$51,613  |NA        |NA        |NA        |\$675     |\$151,700 |\$1,216   |
-  </div>
-</div>
+Of important note, the inputs with missing values across geographic units are concentrated in (1) the four currency-based measures—median family income, mean gross rent, median home value, and median monthly mortgage—(2) the telecommunications indicator (households without telephone service). In practice, this means imputation is required primarily for measures that are both substantively important and potentially sensitive to scaling/standardization decisions, underscoring the need to handle missingness transparently and consistently. As is typical in ACS-derived housing and economic measures, mean gross rent accounts for the largest share of missingness among the currency variables.
 
 <br>
 
-Of note, the above counties all consist of low population areas which seems to be the source for the missing information. Kalawao County in Hawaii is the most unique in that it is a very isolated and protected community which originated as a quarantine village for those with leprosy and the remaining inhabitants are all that are remaining and will be able to reside there. 
+The table below lists the 12 counties with missing values for at least one other component variable.
 
-Of important note is of all of the measures which have missing information for all geographical regions, it consists of the four currency variables which are those at the center of the standardization issues. This means that imputation is required only for the very measures which are driving the neighborhood ADI compounding the ADI issues even further. Additionally, there are plumbing variables missing as well but less than 1% would need to be imputed.
+:::: {style="margin:16px 0"}
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code569"><h4 class="text-white">County NAs</h4></button></center>
+::: {#code569 .collapse}
+| County, ST | Population | B19013_001 | B25043_001 | B25043_007 | B25043_016 | B25064_001 | B25077_001 | B25088_002 |
+|:-------|:-------|:-------|:-------|:-------|:-------|:-------|:-------|:-------|
+| Lonoke County, AR | 70,691 | \$53,631 | NA | NA | NA | \$714 | \$126,900 | \$1,097 |
+| St. Johns County, FL | 210,495 | \$66,194 | NA | NA | NA | \$1,119 | \$244,400 | \$1,756 |
+| Bartow County, GA | 101,336 | \$48,893 | NA | NA | NA | \$822 | \$123,800 | \$1,173 |
+| Catoosa County, GA | 65,375 | \$50,876 | NA | NA | NA | \$730 | \$129,800 | \$1,141 |
+| Floyd County, GA | 96,169 | \$41,549 | NA | NA | NA | \$674 | \$117,100 | \$1,133 |
+| Kalawao County, HI | 85 | \$66,250 | 54 | 0 | 3 | \$856 | NA | NA |
+| Campbell County, KY | 91,475 | \$54,621 | NA | NA | NA | \$748 | \$150,400 | \$1,241 |
+| Storey Parish, NV | 3,929 | \$64,832 | 1,767 | 28 | 0 | NA | \$177,000 | \$1,348 |
+| Kenedy County, TX | 565 | \$36,438 | 145 | 0 | 0 | \$558 | NA | NA |
+| King County, TX | 267 | \$63,250 | 113 | 0 | 0 | \$743 | \$73,000 | NA |
+| Loving County, TX | 117 | NA | 45 | 0 | 0 | \$871 | \$92,500 | NA |
+| Portage County, WI | 70,432 | \$51,613 | NA | NA | NA | \$675 | \$151,700 | \$1,216 |
+:::
+::::
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code498">Show Code</button>
-  <div id="code498" class="collapse">
-```{r, eval = F}
+<br>
+
+Of note, these 12 counties are mixed in population size: seven have relatively higher populations, and the telephone-service indicator is missing only in these higher-population counties. The remaining counties are low-population areas, suggesting that small denominators and related ACS reporting constraints may be contributing to the missingness patterns observed.
+
+Kalawao County, Hawaiʻi is a unique case: it is an isolated, protected community that originated as a settlement for people affected by Hansen’s disease (leprosy), with a small, remaining resident population and highly restricted residency.
+
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code498">Show Code</button>
+::: {#code498 .collapse}
+```{r}
 # By Variables
-NA_Vars <- ReADI_CBG_2015_CBG_Raw[, colSums(is.na(ReADI_CBG_2015_CBG_Raw)) > 0]
-NA_Vars <- as.data.frame(colSums(is.na(NA_Vars))) 
-colnames(NA_Vars) <- "CBG_N"
+na_stats <- function(dat, vars) {
+  n_miss <- colSums(is.na(dat[, vars, drop = FALSE]))
+  perc   <- round(n_miss / nrow(dat) * 100, 2)
+  list(N = n_miss, P = perc)
+}
 
-NA_Vars$Perc_NA_CBG <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,]/nrow(ReADI_CBG_2015_CBG_Raw))*100,2)})
-NA_Vars_CT <- ReADI_CBG_2015_CT_Raw[, colSums(is.na(ReADI_CBG_2015_CT_Raw)) > 0]
-identical(colnames(NA_Vars_CT), rownames(NA_Vars))
-NA_Vars$CT_N <- colSums(is.na(NA_Vars_CT))
+vars_cbg <- names(which(colSums(is.na(ReADI_2015_CBG_Raw)) > 0))
 
-NA_Vars$Perc_NA_CT <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,"CT_N"]/nrow(ReADI_CBG_2015_CT_Raw))*100,2)})
-NA_Vars_C <- ReADI_CBG_2015_C_Raw[, colSums(is.na(ReADI_CBG_2015_C_Raw)) > 0]
-identical(colnames(NA_Vars_C), rownames(NA_Vars))
-NA_Vars$C_N <- colSums(is.na(NA_Vars_C))
-NA_Vars$Perc_NA_C <- sapply(1:nrow(NA_Vars), function (x){val <- round((NA_Vars[x,"C_N"]/nrow(ReADI_CBG_2015_C_Raw))*100,2)})
+stopifnot(
+  identical(vars_cbg, names(which(colSums(is.na(ReADI_2015_CT_Raw)) > 0))),
+  identical(vars_cbg, names(which(colSums(is.na(ReADI_2015_C_Raw)) > 0))))
 
-CountiesMissing <- ReADI_CBG_2015_C_Raw[rowSums(is.na(ReADI_CBG_2015_C_Raw)) > 0, c("GEOID", "County", "State", "B01003_001", rownames(NA_Vars))]
+cbg <- na_stats(ReADI_2015_CBG_Raw, vars_cbg)
+ct  <- na_stats(ReADI_2015_CT_Raw,  vars_cbg)
+c   <- na_stats(ReADI_2015_C_Raw,   vars_cbg)
+
+## combine into one data.frame
+NA_Vars <- data.frame(
+  Variable    = vars_cbg,
+  CBG_N       = cbg$N,
+  Perc_NA_CBG = cbg$P,
+  CT_N        = ct$N,
+  Perc_NA_CT  = ct$P,
+  C_N         = c$N,
+  Perc_NA_C   = c$P,
+  row.names   = vars_cbg,
+  check.names = FALSE)
+
+# Missing by county
+CountiesMissing <- ReADI_2015_C_Raw[rowSums(is.na(ReADI_2015_C_Raw)) > 0, c("GEOID", "County", "State", "B01003_001", rownames(NA_Vars))]
 
 # By Geo Area
-NA_CBG_GEOs <- ReADI_CBG_2015_CBG_Raw[rowSums(is.na(ReADI_CBG_2015_CBG_Raw)) > 0,]
+NA_CBG_GEOs <- ReADI_2015_CBG_Raw[rowSums(is.na(ReADI_2015_CBG_Raw)) > 0,]
 NA_CBG_GEOs <- as.data.frame(rowSums(is.na(NA_CBG_GEOs))) 
 table(NA_CBG_GEOs[1]) # 5 max
 
-NA_CT_GEOs <- ReADI_CBG_2015_CT_Raw[rowSums(is.na(ReADI_CBG_2015_CT_Raw)) > 0,]
+NA_CT_GEOs <- ReADI_2015_CT_Raw[rowSums(is.na(ReADI_2015_CT_Raw)) > 0,]
 NA_CT_GEOs <- as.data.frame(rowSums(is.na(NA_CT_GEOs))) 
 table(NA_CT_GEOs[1]) # 4 max
 
-NA_C_GEOs <- ReADI_CBG_2015_C_Raw[rowSums(is.na(ReADI_CBG_2015_C_Raw)) > 0,]
+NA_C_GEOs <- ReADI_2015_C_Raw[rowSums(is.na(ReADI_2015_C_Raw)) > 0,]
 NA_C_GEOs <- as.data.frame(rowSums(is.na(NA_C_GEOs))) 
 table(NA_C_GEOs[1]) # 3 max
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
 ### Imputation
-***
 
-We will perform a nearest neighbor imputation using type Queen contiguity. The median values of all border touching geographies will be used to replace NAs for the respective geographical levels within state. Imputation will happen iteratively until no further CBGs can be imputed. Among those which can't be imputed in this way we will then impute with the average of the upper level geography if appropriate.
+------------------------------------------------------------------------
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code531">Imputation Function</button>
-  <div id="code531" class="collapse">
-```{r, eval = F}
+We use spatial imputation to address missing values in a small subset of key variables before constructing ReADI. For each geography (block group, tract, county), missing values are imputed using neighboring units defined by queen contiguity within state (polygons that share a border or a vertex).
+
+In brief, the procedure:
+
+1.  Joins the variable of interest to its corresponding geometry within each state.
+2.  Builds a queen-contiguity neighbor list using *spdep::poly2nb()*.
+3.  Iteratively replaces missing values with the median of their neighbors’ values.
+4.  Stops when no further values can be filled in using this rule.
+
+Newly imputed values are allowed to contribute to subsequent iterations, so clusters of missingness are gradually filled in from their observed borders inward. Units that remain missing after this process are typically geographically isolated (for example, islands, national parks, or small federal facilities) or have neighbours that are all missing for that variable.
+
+When running the spatial imputation function you may see warnings such as:
+
+-   “some observations have no neighbours”
+-   “neighbour object has X sub-graphs”
+
+These messages are expected for real-world geographies and do not indicate that the imputation has failed. “No neighbors” means a polygon has no contiguous neighbors under queen contiguity and therefore cannot borrow information; “sub-graphs” indicates that the adjacency graph is split into separate clusters (for example, mainland vs islands), and imputation is carried out within each cluster separately.
+
+We do not force additional neighbors (for example, by using large snapping tolerances or k-nearest-neighbor rules) because that would introduce arbitrary spatial relationships that are difficult to justify. A small number of units are therefore expected to remain missing after spatial imputation and are handled explicitly in later steps.
+
+> Imputation Functions
+
+The following code defines the reusable functions used for spatial imputation at each geography:
+
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code531">Imputation Function</button>
+::: {#code531 .collapse}
+```{r}
 impute.fun <- function(data, var, shape) {
+  # pull GEOID + variable, rename to "estimate"
   variable <- data[, c("GEOID", var)]
   colnames(variable) <- c("GEOID", "estimate")
   message(paste0(sum(is.na(variable$estimate)), " missing before imputation."))
-  df <- shape %>% left_join(variable, by = "GEOID")
-  df <- df[!is.na(st_dimension(df)),]
+
+  # join onto shape and drop invalid geometries
+  df <- dplyr::left_join(shape, variable, by = "GEOID")
+  df <- df[!is.na(sf::st_dimension(df)), ]
+
   df$State <- substr(df$GEOID, 1, 2)
   df$raw.estimate <- df$estimate
-  
-  # set check values for iterative while loop:
-  missing.pre <- 1
-  missing.post <- 0
 
-  # while loop for iterations!
-  while(missing.pre > missing.post) { 
-    missing.pre <- sum(is.na(df$estimate))
-    imputed <- bind_rows(lapply(unique(df$State), function(x){
-      df2 <- df[df$State == x,]
-      df2$index <- 1:nrow(df2)
-      df2$nb <- spdep::poly2nb(df2, queen = TRUE)
-      df2$geometry <- NULL
-      df2$imputed <- unlist(lapply(df2$nb, function(z){
-        median(df2$estimate[z], na.rm = T)}))
-      df2 <- df2[, c("GEOID", "estimate", "State", "imputed")]
-      return(df2)
-      }))
-    df$imputed <- NULL
-    df <- left_join(df, imputed, by = c("GEOID", "estimate", "State"))
-    df$estimate <- ifelse(is.na(df$estimate), df$imputed, df$estimate)
-    missing.post <- sum(is.na(df$estimate))
+  n <- nrow(df)
+  states <- df$State
+  state_levels <- unique(states)
+
+  # precompute row indices per state
+  idx_list <- split(seq_len(n), states)
+
+  # precompute neighbour lists per state (geometry only)
+  nb_list <- vector("list", length(state_levels))
+  names(nb_list) <- state_levels
+  for (st in state_levels) {
+    idx <- idx_list[[st]]
+    nb_list[[st]] <- spdep::poly2nb(df[idx, ], queen = TRUE)
   }
+
+  imputed_last <- rep(NA_real_, n)  # will hold the last round of neighbour medians
+
+  repeat {
+    missing_pre <- sum(is.na(df$estimate))
+
+    # compute neighbour medians for current estimates
+    imputed <- rep(NA_real_, n)
+    for (st in state_levels) {
+      idx <- idx_list[[st]]
+      est_state <- df$estimate[idx]
+      nb_state  <- nb_list[[st]]
+
+      imputed[idx] <- vapply(
+        nb_state,
+        function(z) stats::median(est_state[z], na.rm = TRUE),
+        numeric(1)
+      )
+    }
+
+    # keep a copy of the latest neighbour medians
+    imputed_last <- imputed
+
+    # same logic as before: only fill where estimate is NA
+    na_pos <- which(is.na(df$estimate))
+    df$estimate[na_pos] <- imputed[na_pos]
+
+    missing_post <- sum(is.na(df$estimate))
+    if (missing_post >= missing_pre) break
+  }
+
+  # attach the final neighbour-median predictions
+  df$imputed <- imputed_last
+
   message(paste0(sum(is.na(df$estimate)), " missing after imputing."))
-  return(df)
+  df
+}
+
+impute_vars <- function(data, shape, vars, level_label = "") {
+  # inner helper for a single variable
+  impute_one <- function(var_name) {
+    msg_suffix <- if (nzchar(level_label)) paste0(" at ", level_label, " level") else ""
+    message("Imputing ", var_name, msg_suffix, " ...")
+
+    df_imp <- impute.fun(
+      data  = data,
+      var   = var_name,
+      shape = shape
+    )
+
+    # diagnostics (same as you had)
+    message("Correlation (estimate vs raw) for ", var_name)
+    print(cor.test(df_imp$estimate, df_imp$raw.estimate))
+
+    message("Correlation (imputed vs raw) for ", var_name)
+    print(cor.test(df_imp$imputed, df_imp$raw.estimate))
+
+    # drop geometry, keep GEOID + estimate, rename back to original var name
+    df_imp$geometry <- NULL
+    out <- df_imp[, c("GEOID", "estimate")]
+    names(out)[names(out) == "estimate"] <- var_name
+
+    out
+  }
+
+  # run for all vars
+  res_list <- lapply(vars, impute_one)
+
+  # combine like your chained plyr::join calls
+  imputed <- plyr::join_all(res_list, by = "GEOID", type = "left")
+
+  # NA check (same info you were printing manually)
+  na_counts <- sapply(vars, function(v) sum(is.na(imputed[[v]])))
+  message("Remaining NAs by variable:")
+  print(na_counts)
+
+  imputed
 }
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
-> CBG
+> Block group (CBG) imputation
 
-Imputation was successful in that only the NAs were imputed and replaced in the overall dataset though there are some NAs remaining which will be investigated below. Out of interest the following table will include how correlated the actual measure is to a fully imputed measure.
+At the census block group (CBG) level, spatial imputation is applied to the subset of variables that contain missing values. Only originally missing entries are replaced; observed values are retained unchanged in the final dataset. However, because the imputation model generates predicted (i.e., “imputed”) values for all CBGs during fitting, we can evaluate performance by comparing the model’s predicted values against the observed (non-missing) values. The table below summarizes, for each imputed variable, (1) the correlation between predicted (imputed) and observed values across all CBGs with observed data, (2) the significance of that correlation, and (3) the number of missing values remaining after imputation.
 
-<div class = "row">
-<div class = "col-md-6">
-|Variable       |$r$         |*p*value        |NAs Remaining   |
-|:--------------|:-----------|:---------------|:---------------|
-|B19013_001     |0.78        |$<2.2x10^{-16}$ |10              |
-|B25043_001     |0.42        |$<2.2x10^{-16}$ |0               |
-|B25043_007     |0.24        |$<2.2x10^{-16}$ |0               |
-|B25043_016     |0.29        |$<2.2x10^{-16}$ |0               |
-|B25064_001     |0.80        |$<2.2x10^{-16}$ |16              |
-|B25077_001     |0.91        |$<2.2x10^{-16}$ |8               |
-|B25088_002     |0.89        |$<2.2x10^{-16}$ |10              |
-</div>
+::::: row
+::: col-md-6
+| Variable   | $r$  | *p*value        | NAs Remaining |
+|:-----------|:-----|:----------------|:--------------|
+| B19013_001 | 0.78 | $<2.2x10^{-16}$ | 10            |
+| B25043_001 | 0.42 | $<2.2x10^{-16}$ | 0             |
+| B25043_007 | 0.23 | $<2.2x10^{-16}$ | 0             |
+| B25043_016 | 0.29 | $<2.2x10^{-16}$ | 0             |
+| B25064_001 | 0.80 | $<2.2x10^{-16}$ | 16            |
+| B25077_001 | 0.91 | $<2.2x10^{-16}$ | 8             |
+| B25088_002 | 0.89 | $<2.2x10^{-16}$ | 10            |
+:::
 
-<div class = "col-md-6">
-</div>
-</div>
+::: col-md-6
+:::
+:::::
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code581">Show Code</button>
-  <div id="code581" class="collapse">
-```{r, eval = F}
-load("ACS_CBG_2015_Geometry.RData")
-load("ReADI_CBG_2015_CBG_Raw.RData")
+Overall, the imputation performs well for the variables with missingness, with strong agreement between predicted (imputed) and observed values. 
 
-B19013_Impute_CBG <- impute.fun(data = ReADI_CBG_2015_CBG_Raw, var = "B19013_001", shape = ACS_CBG_2015_Geometry) 
-head(B19013_Impute_CBG)
-cor.test(B19013_Impute_CBG$estimate, B19013_Impute_CBG$raw.estimate) # should always be 1 as NAs are removed to ensure nothing changed to the non-missing data.
-cor.test(B19013_Impute_CBG$imputed, B19013_Impute_CBG$raw.estimate) 
-B19013_Impute_CBG$geometry <- NULL
-B19013_Impute_CBG <- B19013_Impute_CBG[, c("GEOID", "estimate")]
-colnames(B19013_Impute_CBG) <- c("GEOID", "B19013_001")
+The code below runs the imputation for block groups and produces the post-imputation dataset used in subsequent ReADI construction steps.
 
-B25043_001_Impute_CBG <- impute.fun(data = ReADI_CBG_2015_CBG_Raw, var = "B25043_001", shape = ACS_CBG_2015_Geometry)
-cor.test(B25043_001_Impute_CBG$estimate, B25043_001_Impute_CBG$raw.estimate)
-cor.test(B25043_001_Impute_CBG$imputed, B25043_001_Impute_CBG$raw.estimate) 
-B25043_001_Impute_CBG$geometry <- NULL
-B25043_001_Impute_CBG <- B25043_001_Impute_CBG[, c("GEOID", "estimate")]
-colnames(B25043_001_Impute_CBG) <- c("GEOID", "B25043_001")
-
-B25043_007_Impute_CBG <- impute.fun(data = ReADI_CBG_2015_CBG_Raw, var = "B25043_007", shape = ACS_CBG_2015_Geometry)
-cor.test(B25043_007_Impute_CBG$estimate, B25043_007_Impute_CBG$raw.estimate)
-cor.test(B25043_007_Impute_CBG$imputed, B25043_007_Impute_CBG$raw.estimate) 
-B25043_007_Impute_CBG$geometry <- NULL
-B25043_007_Impute_CBG <- B25043_007_Impute_CBG[, c("GEOID", "estimate")]
-colnames(B25043_007_Impute_CBG) <- c("GEOID", "B25043_007")
-
-B25043_016_Impute_CBG <- impute.fun(data = ReADI_CBG_2015_CBG_Raw, var = "B25043_016", shape = ACS_CBG_2015_Geometry)
-cor.test(B25043_016_Impute_CBG$estimate, B25043_016_Impute_CBG$raw.estimate)
-cor.test(B25043_016_Impute_CBG$imputed, B25043_016_Impute_CBG$raw.estimate) 
-B25043_016_Impute_CBG$geometry <- NULL
-B25043_016_Impute_CBG <- B25043_016_Impute_CBG[, c("GEOID", "estimate")]
-colnames(B25043_016_Impute_CBG) <- c("GEOID", "B25043_016")
-
-B25064_Impute_CBG <- impute.fun(data = ReADI_CBG_2015_CBG_Raw, var = "B25064_001", shape = ACS_CBG_2015_Geometry)
-cor.test(B25064_Impute_CBG$estimate, B25064_Impute_CBG$raw.estimate)
-cor.test(B25064_Impute_CBG$imputed, B25064_Impute_CBG$raw.estimate) 
-B25064_Impute_CBG$geometry <- NULL
-B25064_Impute_CBG <- B25064_Impute_CBG[, c("GEOID", "estimate")]
-colnames(B25064_Impute_CBG) <- c("GEOID", "B25064_001")
-
-B25077_Impute_CBG <- impute.fun(data = ReADI_CBG_2015_CBG_Raw, var = "B25077_001", shape = ACS_CBG_2015_Geometry)
-cor.test(B25077_Impute_CBG$estimate, B25077_Impute_CBG$raw.estimate)
-cor.test(B25077_Impute_CBG$imputed, B25077_Impute_CBG$raw.estimate) 
-B25077_Impute_CBG$geometry <- NULL
-B25077_Impute_CBG <- B25077_Impute_CBG[, c("GEOID", "estimate")]
-colnames(B25077_Impute_CBG) <- c("GEOID", "B25077_001")
-
-B25088_Impute_CBG <- impute.fun(data = ReADI_CBG_2015_CBG_Raw, var = "B25088_002", shape = ACS_CBG_2015_Geometry)
-cor.test(B25088_Impute_CBG$estimate, B25088_Impute_CBG$raw.estimate)
-cor.test(B25088_Impute_CBG$imputed, B25088_Impute_CBG$raw.estimate) 
-B25088_Impute_CBG$geometry <- NULL
-B25088_Impute_CBG <- B25088_Impute_CBG[, c("GEOID", "estimate")]
-colnames(B25088_Impute_CBG) <- c("GEOID", "B25088_002")
-
-CBG_2015_Imputed <- plyr::join(B19013_Impute_CBG, B25043_001_Impute_CBG, by = "GEOID")
-CBG_2015_Imputed <- plyr::join(CBG_2015_Imputed, B25043_007_Impute_CBG, by = "GEOID")
-CBG_2015_Imputed <- plyr::join(CBG_2015_Imputed, B25043_016_Impute_CBG, by = "GEOID")
-CBG_2015_Imputed <- plyr::join(CBG_2015_Imputed, B25064_Impute_CBG, by = "GEOID")
-CBG_2015_Imputed <- plyr::join(CBG_2015_Imputed, B25077_Impute_CBG, by = "GEOID")
-CBG_2015_Imputed <- plyr::join(CBG_2015_Imputed, B25088_Impute_CBG, by = "GEOID")
-save(CBG_2015_Imputed, file = "CBG_2015_Imputed.RData")
-
-sum(is.na(CBG_2015_Imputed$B19013_001)) #10
-sum(is.na(CBG_2015_Imputed$B25043_001)) #0
-sum(is.na(CBG_2015_Imputed$B25043_007)) #0
-sum(is.na(CBG_2015_Imputed$B25043_016)) #0
-sum(is.na(CBG_2015_Imputed$B25064_001)) #16
-sum(is.na(CBG_2015_Imputed$B25077_001)) #8
-sum(is.na(CBG_2015_Imputed$B25088_002)) #10
-
-ReADI_CBG_2015_Imp <- ReADI_CBG_2015_CBG_Raw[, !colnames(ReADI_CBG_2015_CBG_Raw) %in% c("B19013_001", "B25043_001", "B25043_007", "B25043_016", "B25064_001", "B25077_001", "B25088_002")]
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code581">Show Code</button>
+::: {#code581 .collapse}
+```{r, warning = FALSE}
+vars <- c("B19013_001", "B25043_001", "B25043_007", "B25043_016", "B25064_001", "B25077_001", "B25088_002")
+CBG_2015_Imputed <- impute_vars(
+  data        = ReADI_2015_CBG_Raw,
+  shape       = ACS_CBG_2015_Geometry,
+  vars        = vars,
+  level_label = "CBG")
+ReADI_CBG_2015_Imp <- ReADI_2015_CBG_Raw[, !names(ReADI_2015_CBG_Raw) %in% vars]
 ReADI_CBG_2015_Imp <- plyr::join(ReADI_CBG_2015_Imp, CBG_2015_Imputed, by = "GEOID")
-save(ReADI_CBG_2015_Imp, file = "ReADI_CBG_2015_Imp.RData")
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
-> CT
+> Census Tract (CT)
 
-<div class = "row">
-<div class = "col-md-6">
-|Variable       |$r$         |*p*value        |NAs Remaining   |
-|:--------------|:-----------|:---------------|:---------------|
-|B19013_001     |0.81        |$<2.2x10^{-16}$ |3               |
-|B25043_001     |0.41        |$<2.2x10^{-16}$ |0               |
-|B25043_007     |0.38        |$<2.2x10^{-16}$ |0               |
-|B25043_016     |0.44        |$<2.2x10^{-16}$ |0               |
-|B25064_001     |0.81        |$<2.2x10^{-16}$ |3               |
-|B25077_001     |0.91        |$<2.2x10^{-16}$ |3               |
-|B25088_002     |0.90        |$<2.2x10^{-16}$ |3               |
-</div>
+The same spatial imputation strategy is applied at the census tract and county levels, using tract and county geometries and state-specific neighbor lists. For each geography, only originally missing values are imputed, and imputation proceeds iteratively within state until no additional units can be filled based on their neighbors.
 
-<div class = "col-md-6">
-</div>
-</div>
+::::: row
+::: col-md-6
+| Variable   | $r$  | *p*value        | NAs Remaining |
+|:-----------|:-----|:----------------|:--------------|
+| B19013_001 | 0.81 | $<2.2x10^{-16}$ | 3             |
+| B25043_001 | 0.41 | $<2.2x10^{-16}$ | 0             |
+| B25043_007 | 0.37 | $<2.2x10^{-16}$ | 0             |
+| B25043_016 | 0.44 | $<2.2x10^{-16}$ | 0             |
+| B25064_001 | 0.81 | $<2.2x10^{-16}$ | 3             |
+| B25077_001 | 0.91 | $<2.2x10^{-16}$ | 3             |
+| B25088_002 | 0.90 | $<2.2x10^{-16}$ | 3             |
+:::
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code639">Show Code</button>
-  <div id="code639" class="collapse">
-```{r, eval = F}
-load("ACS_CT_2015_Geometry.RData")
-load("ReADI_CBG_2015_CT_Raw.RData")
+::: col-md-6
+:::
+:::::
 
-B19013_Impute_CT <- impute.fun(data = ReADI_CBG_2015_CT_Raw, var = "B19013_001", shape = ACS_CT_2015_Geometry)
-cor.test(B19013_Impute_CT$estimate, B19013_Impute_CT$raw.estimate) # should always be 1, as nas are removed, to ensure nothing changed to the non-missing data.
-cor.test(B19013_Impute_CT$imputed, B19013_Impute_CT$raw.estimate) 
-B19013_Impute_CT$geometry <- NULL
-B19013_Impute_CT <- B19013_Impute_CT[, c("GEOID", "estimate")]
-colnames(B19013_Impute_CT) <- c("GEOID", "B19013_001")
-
-B25043_1_Impute_CT <- impute.fun(data = ReADI_CBG_2015_CT_Raw, var = "B25043_001", shape = ACS_CT_2015_Geometry)
-cor.test(B25043_1_Impute_CT$estimate, B25043_1_Impute_CT$raw.estimate)
-cor.test(B25043_1_Impute_CT$imputed, B25043_1_Impute_CT$raw.estimate) # 0.41 p < 2.2e-16 - this is low BUT only 140 are replaced.
-B25043_1_Impute_CT$geometry <- NULL
-B25043_1_Impute_CT <- B25043_1_Impute_CT[, c("GEOID", "estimate")]
-colnames(B25043_1_Impute_CT) <- c("GEOID", "B25043_001")
-
-B25043_7_Impute_CT <- impute.fun(data = ReADI_CBG_2015_CT_Raw, var = "B25043_007", shape = ACS_CT_2015_Geometry)
-cor.test(B25043_7_Impute_CT$estimate, B25043_7_Impute_CT$raw.estimate)
-cor.test(B25043_7_Impute_CT$imputed, B25043_7_Impute_CT$raw.estimate) # 0.38 p < 2.2e-16 - this is low BUT only 140 are replaced.
-B25043_7_Impute_CT$geometry <- NULL
-B25043_7_Impute_CT <- B25043_7_Impute_CT[, c("GEOID", "estimate")]
-colnames(B25043_7_Impute_CT) <- c("GEOID", "B25043_007")
-
-B25043_16_Impute_CT <- impute.fun(data = ReADI_CBG_2015_CT_Raw, var = "B25043_016", shape = ACS_CT_2015_Geometry)
-cor.test(B25043_16_Impute_CT$estimate, B25043_16_Impute_CT$raw.estimate)
-cor.test(B25043_16_Impute_CT$imputed, B25043_16_Impute_CT$raw.estimate) # 0.44 p < 2.2e-16 - this is low BUT only 140 are replaced.
-B25043_16_Impute_CT$geometry <- NULL
-B25043_16_Impute_CT <- B25043_16_Impute_CT[, c("GEOID", "estimate")]
-colnames(B25043_16_Impute_CT) <- c("GEOID", "B25043_016")
-
-B25064_Impute_CT <- impute.fun(data = ReADI_CBG_2015_CT_Raw, var = "B25064_001", shape = ACS_CT_2015_Geometry)
-cor.test(B25064_Impute_CT$estimate, B25064_Impute_CT$raw.estimate)
-cor.test(B25064_Impute_CT$imputed, B25064_Impute_CT$raw.estimate) 
-B25064_Impute_CT$geometry <- NULL
-B25064_Impute_CT <- B25064_Impute_CT[, c("GEOID", "estimate")]
-colnames(B25064_Impute_CT) <- c("GEOID", "B25064_001")
-
-B25077_Impute_CT <- impute.fun(data = ReADI_CBG_2015_CT_Raw, var = "B25077_001", shape = ACS_CT_2015_Geometry)
-cor.test(B25077_Impute_CT$estimate, B25077_Impute_CT$raw.estimate)
-cor.test(B25077_Impute_CT$imputed, B25077_Impute_CT$raw.estimate) 
-B25077_Impute_CT$geometry <- NULL
-B25077_Impute_CT <- B25077_Impute_CT[, c("GEOID", "estimate")]
-colnames(B25077_Impute_CT) <- c("GEOID", "B25077_001")
-
-B25088_Impute_CT <- impute.fun(data = ReADI_CBG_2015_CT_Raw, var = "B25088_002", shape = ACS_CT_2015_Geometry)
-cor.test(B25088_Impute_CT$estimate, B25088_Impute_CT$raw.estimate)
-cor.test(B25088_Impute_CT$imputed, B25088_Impute_CT$raw.estimate) 
-B25088_Impute_CT$geometry <- NULL
-B25088_Impute_CT <- B25088_Impute_CT[, c("GEOID", "estimate")]
-colnames(B25088_Impute_CT) <- c("GEOID", "B25088_002")
-
-CT_2015_Imputed <- plyr::join(B19013_Impute_CT, B25043_1_Impute_CT, by = "GEOID")
-CT_2015_Imputed <- plyr::join(CT_2015_Imputed, B25043_7_Impute_CT, by = "GEOID")
-CT_2015_Imputed <- plyr::join(CT_2015_Imputed, B25043_16_Impute_CT, by = "GEOID")
-CT_2015_Imputed <- plyr::join(CT_2015_Imputed, B25064_Impute_CT, by = "GEOID")
-CT_2015_Imputed <- plyr::join(CT_2015_Imputed, B25077_Impute_CT, by = "GEOID")
-CT_2015_Imputed <- plyr::join(CT_2015_Imputed, B25088_Impute_CT, by = "GEOID")
-save(CT_2015_Imputed, file = "CT_2015_Imputed.RData")
-
-sum(is.na(CT_2015_Imputed$B19013_001)) #3
-sum(is.na(CT_2015_Imputed$B25043_001)) #0
-sum(is.na(CT_2015_Imputed$B25043_007)) #0
-sum(is.na(CT_2015_Imputed$B25043_016)) #0
-sum(is.na(CT_2015_Imputed$B25064_001)) #3
-sum(is.na(CT_2015_Imputed$B25077_001)) #3
-sum(is.na(CT_2015_Imputed$B25088_002)) #3 
-
-ReADI_CT_2015_Imp <- ReADI_CBG_2015_CT_Raw[, !colnames(ReADI_CBG_2015_CT_Raw) %in% c("B19013_001", "B25043_001", "B25043_007", "B25043_016", "B25064_001", "B25077_001", "B25088_002")]
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code639">Show Code</button>
+::: {#code639 .collapse}
+```{r, warning = FALSE}
+CT_2015_Imputed <- impute_vars(
+  data        = ReADI_2015_CT_Raw,
+  shape       = ACS_CT_2015_Geometry,
+  vars        = vars,
+  level_label = "CT")
+ReADI_CT_2015_Imp <- ReADI_2015_CT_Raw[, !names(ReADI_2015_CT_Raw) %in% vars]
 ReADI_CT_2015_Imp <- plyr::join(ReADI_CT_2015_Imp, CT_2015_Imputed, by = "GEOID")
-save(ReADI_CT_2015_Imp, file = "ReADI_CT_2015_Imp.RData")
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
-> C
+> Counties
 
-<div class = "row">
-<div class = "col-md-6">
-|Variable       |$r$          |*p*value       |NAs Remaining   |
-|:--------------|:------------|:--------------|:---------------|
-|B19013_001     |0.78        |$<2.2x10^{-16}$ |0               |
-|B25043_001     |0.54        |$<2.2x10^{-16}$ |0               |
-|B25043_007     |0.49        |$<2.2x10^{-16}$ |0               |
-|B25043_016     |0.48        |$<2.2x10^{-16}$ |0               |
-|B25064_001     |0.84        |$<2.2x10^{-16}$ |0               |
-|B25077_001     |0.85        |$<2.2x10^{-16}$ |0               |
-|B25088_002     |0.87        |$<2.2x10^{-16}$ |0               |
-</div>
+The same spatial imputation strategy is applied at the census tract and county levels, using tract and county geometries and state-specific neighbor lists. For each geography, only originally missing values are imputed, and imputation proceeds iteratively within state until no additional units can be filled based on their neighbors.
 
-<div class = "col-md-6">
-</div>
-</div>
+::::: row
+::: col-md-6
+| Variable   | $r$  | *p*value        | NAs Remaining |
+|:-----------|:-----|:----------------|:--------------|
+| B19013_001 | 0.75 | $<2.2x10^{-16}$ | 0             |
+| B25043_001 | 0.54 | $<2.2x10^{-16}$ | 0             |
+| B25043_007 | 0.49 | $<2.2x10^{-16}$ | 0             |
+| B25043_016 | 0.48 | $<2.2x10^{-16}$ | 0             |
+| B25064_001 | 0.83 | $<2.2x10^{-16}$ | 0             |
+| B25077_001 | 0.85 | $<2.2x10^{-16}$ | 0             |
+| B25088_002 | 0.87 | $<2.2x10^{-16}$ | 0             |
+:::
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code701">Show Code</button>
-  <div id="code701" class="collapse">
-```{r, eval = F}
-load("ACS_C_2015_Geometry.RData")
-load("ReADI_CBG_2015_C_Raw.RData")
+::: col-md-6
+:::
+:::::
 
-## For the code to work you need to remove state 11 (DC) as it has only one county and will trigger an error.
-table(ReADI_CBG_2015_C_Raw$State)
-data = ReADI_CBG_2015_C_Raw[!ReADI_CBG_2015_C_Raw$State == " District of Columbia",]
-geoid_rm <- ReADI_CBG_2015_C_Raw[ReADI_CBG_2015_C_Raw$State == " District of Columbia", "GEOID"]
-shape = ACS_C_2015_Geometry[!ACS_C_2015_Geometry$GEOID %in% geoid_rm,]
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code701">Show Code</button>
+::: {#code701 .collapse}
+```{r, warning = FALSE}
+## Remove DC for spatial imputation
+data_no_dc  <- ReADI_2015_C_Raw[ReADI_2015_C_Raw$State != " District of Columbia", ]
+geoid_dc    <- ReADI_2015_C_Raw[ReADI_2015_C_Raw$State == " District of Columbia", "GEOID"]
+shape_no_dc <- ACS_C_2015_Geometry[!ACS_C_2015_Geometry$GEOID %in% geoid_dc, ]
 
-B19013_Impute_C <- impute.fun(data = data, var = "B19013_001", shape = shape)
-cor.test(B19013_Impute_C$estimate, B19013_Impute_C$raw.estimate)
-cor.test(B19013_Impute_C$imputed, B19013_Impute_C$raw.estimate) 
-B19013_Impute_C$geometry <- NULL
-B19013_Impute_C <- B19013_Impute_C[, c("GEOID", "estimate")]
-colnames(B19013_Impute_C) <- c("GEOID", "B19013_001")
+C_2015_Imputed <- impute_vars(
+  data        = data_no_dc,
+  shape       = shape_no_dc,
+  vars        = vars,
+  level_label = "county (excluding DC)")
 
-B25043_1_Impute_C <- impute.fun(data = data, var = "B25043_001", shape = shape)
-cor.test(B25043_1_Impute_C$estimate, B25043_1_Impute_C$raw.estimate)
-cor.test(B25043_1_Impute_C$imputed, B25043_1_Impute_C$raw.estimate) # 0.54 p < 2.2e-16 - this is low BUT only 7 are replaced.
-B25043_1_Impute_C$geometry <- NULL
-B25043_1_Impute_C <- B25043_1_Impute_C[, c("GEOID", "estimate")]
-colnames(B25043_1_Impute_C) <- c("GEOID", "B25043_001")
-
-B25043_7_Impute_C <- impute.fun(data = data, var = "B25043_007", shape = shape)
-cor.test(B25043_7_Impute_C$estimate, B25043_7_Impute_C$raw.estimate)
-cor.test(B25043_7_Impute_C$imputed, B25043_7_Impute_C$raw.estimate) # 0.49 p < 2.2e-16 - this is low BUT only 7 are replaced.
-B25043_7_Impute_C$geometry <- NULL
-B25043_7_Impute_C <- B25043_7_Impute_C[, c("GEOID", "estimate")]
-colnames(B25043_7_Impute_C) <- c("GEOID", "B25043_007")
-
-B25043_16_Impute_C <- impute.fun(data = data, var = "B25043_016", shape = shape)
-cor.test(B25043_16_Impute_C$estimate, B25043_16_Impute_C$raw.estimate)
-cor.test(B25043_16_Impute_C$imputed, B25043_16_Impute_C$raw.estimate) # 0.48 p < 2.2e-16 - this is low BUT only 7 are replaced.
-B25043_16_Impute_C$geometry <- NULL
-B25043_16_Impute_C <- B25043_16_Impute_C[, c("GEOID", "estimate")]
-colnames(B25043_16_Impute_C) <- c("GEOID", "B25043_016")
-
-B25064_Impute_C <- impute.fun(data = data, var = "B25064_001", shape = shape)
-cor.test(B25064_Impute_C$estimate, B25064_Impute_C$raw.estimate)
-cor.test(B25064_Impute_C$imputed, B25064_Impute_C$raw.estimate) 
-B25064_Impute_C$geometry <- NULL
-B25064_Impute_C <- B25064_Impute_C[, c("GEOID", "estimate")]
-colnames(B25064_Impute_C) <- c("GEOID", "B25064_001")
-
-B25077_Impute_C <- impute.fun(data = data, var = "B25077_001", shape = shape)
-cor.test(B25077_Impute_C$estimate, B25077_Impute_C$raw.estimate)
-cor.test(B25077_Impute_C$imputed, B25077_Impute_C$raw.estimate) 
-B25077_Impute_C$geometry <- NULL
-B25077_Impute_C <- B25077_Impute_C[, c("GEOID", "estimate")]
-colnames(B25077_Impute_C) <- c("GEOID", "B25077_001")
-
-B25088_Impute_C <- impute.fun(data = data, var = "B25088_002", shape = shape)
-cor.test(B25088_Impute_C$estimate, B25088_Impute_C$raw.estimate)
-cor.test(B25088_Impute_C$imputed, B25088_Impute_C$raw.estimate) 
-B25088_Impute_C$geometry <- NULL
-B25088_Impute_C <- B25088_Impute_C[, c("GEOID", "estimate")]
-colnames(B25088_Impute_C) <- c("GEOID", "B25088_002")
-
-C_2015_Imputed <- plyr::join(B19013_Impute_C, B25043_1_Impute_C, by = "GEOID")
-C_2015_Imputed <- plyr::join(C_2015_Imputed, B25043_7_Impute_C, by = "GEOID")
-C_2015_Imputed <- plyr::join(C_2015_Imputed, B25043_16_Impute_C, by = "GEOID")
-C_2015_Imputed <- plyr::join(C_2015_Imputed, B25064_Impute_C, by = "GEOID")
-C_2015_Imputed <- plyr::join(C_2015_Imputed, B25077_Impute_C, by = "GEOID")
-C_2015_Imputed <- plyr::join(C_2015_Imputed, B25088_Impute_C, by = "GEOID")
-save(C_2015_Imputed, file = "C_2015_Imputed.RData")
-
-sum(is.na(C_2015_Imputed$B19013_001)) #0
-sum(is.na(C_2015_Imputed$B25043_001)) #0
-sum(is.na(C_2015_Imputed$B25043_007)) #0
-sum(is.na(C_2015_Imputed$B25043_016)) #0
-sum(is.na(C_2015_Imputed$B25064_001)) #0
-sum(is.na(C_2015_Imputed$B25077_001)) #0
-sum(is.na(C_2015_Imputed$B25088_002)) #0
-
-ReADI_C_2015_Imp <- ReADI_CBG_2015_C_Raw[, !colnames(ReADI_CBG_2015_C_Raw) %in% c("B19013_001", "B25043_001", "B25043_007", "B25043_016", "B25064_001", "B25077_001", "B25088_002")]
+ReADI_C_2015_Imp <- ReADI_2015_C_Raw[, !names(ReADI_2015_C_Raw) %in% vars]
 ReADI_C_2015_Imp <- plyr::join(ReADI_C_2015_Imp, C_2015_Imputed, by = "GEOID")
 
-# replacing District of Columbia data removed in previous line.
-identical(ReADI_CBG_2015_C_Raw$GEOID, ReADI_C_2015_Imp$GEOID)
-ReADI_C_2015_Imp$B19013_001 <- ifelse(is.na(ReADI_C_2015_Imp$B19013_001), ReADI_CBG_2015_C_Raw$B19013_001, ReADI_C_2015_Imp$B19013_001)
-ReADI_C_2015_Imp$B25043_001 <- ifelse(is.na(ReADI_C_2015_Imp$B25043_001), ReADI_CBG_2015_C_Raw$B25043_001, ReADI_C_2015_Imp$B25043_001)
-ReADI_C_2015_Imp$B25043_007 <- ifelse(is.na(ReADI_C_2015_Imp$B25043_007), ReADI_CBG_2015_C_Raw$B25043_007, ReADI_C_2015_Imp$B25043_007)
-ReADI_C_2015_Imp$B25043_016 <- ifelse(is.na(ReADI_C_2015_Imp$B25043_016), ReADI_CBG_2015_C_Raw$B25043_016, ReADI_C_2015_Imp$B25043_016)
-ReADI_C_2015_Imp$B25064_001 <- ifelse(is.na(ReADI_C_2015_Imp$B25064_001), ReADI_CBG_2015_C_Raw$B25064_001, ReADI_C_2015_Imp$B25064_001)
-ReADI_C_2015_Imp$B25077_001 <- ifelse(is.na(ReADI_C_2015_Imp$B25077_001), ReADI_CBG_2015_C_Raw$B25077_001, ReADI_C_2015_Imp$B25077_001)
-ReADI_C_2015_Imp$B25088_002 <- ifelse(is.na(ReADI_C_2015_Imp$B25088_002), ReADI_CBG_2015_C_Raw$B25088_002, ReADI_C_2015_Imp$B25088_002)
-save(ReADI_C_2015_Imp, file = "ReADI_C_2015_Imp.RData")
+stopifnot(identical(ReADI_2015_C_Raw$GEOID, ReADI_C_2015_Imp$GEOID))
+
+## Restore DC’s original values (they were excluded from imputation)
+for (v in vars) {
+  ReADI_C_2015_Imp[[v]] <- ifelse(
+    is.na(ReADI_C_2015_Imp[[v]]),
+    ReADI_2015_C_Raw[[v]],
+    ReADI_C_2015_Imp[[v]]
+  )}
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
-### Missing After Imputation
-***
+### Remaining Missing Values After Spatial Imputation
+
+------------------------------------------------------------------------
 
 <br>
 
-The plumbing variables were all successfully imputed. The currency variables have some missing values remaining. The main reason why there would still be missing information after imputation is due to the imputation method used which required measures due to bordering geographies which would not impute areas which have no bordering areas such as islands. We will investigate what areas are remaining and if it makes sense to impute for these regions.
+After the primary spatial imputation step, a small number of geographic units still have missing values. These remaining NAs occur almost entirely in areas that either (1) have no bordering geographies to borrow information from (for example, isolated tracts or block groups and islands) or (2) are special-use areas such as national parks, military or naval facilities, or other atypically enumerated locations. 
 
-> Census Tracts
+To handle the remaining missingness, we use a simple hierarchical approach: where units are clearly non-residential or special-use, we remove them from the analytic dataset; otherwise, we borrow information from the next-highest relevant geography.
 
-Of the missing data remaining after imputation there are 9 total census tracts, 8 of which are NAs for all measures. Information based on [Census Reporter](https://censusreporter.org/profiles/):
+### Counties
 
-<div style="margin:16px 0">
- <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855"><h4 class="text-white">CT NAs</h4></button></center>
-  <div id="code855" class="collapse">
+------------------------------------------------------------------------
 
-|GEOID      |CT   |Location                  |Population|CT Information                         |
-|:----------|:----|:-------------------------|:---------|:--------------------------------------|
-|06111980000|9800 |Ventura County, CA        |110       |Naval Facility San Nicolas Island.     |
-|12087980100|9801 |Monroe County, FL         |8         |Dry Tortugas is a National Park.       |
-|26083980100|9801 |Keweenaw County, MI       |15        |Isle Royale Island is a National Park. |
-  </div>
-</div>
+<br>
 
-As all of the census tracts which have remaining NAs, they are either national parks whose population consist of rangers or a naval base these CTs will be removed.
+No counties have missing values after spatial imputation.
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code787">Show Code</button>
-  <div id="code787" class="collapse">
-```{r, eval = F}
-load("ReADI_CT_2015_Imp.RData")
-load("ACS_CT_2015_Geometry.RData")
-B19013_001_NAs <- ReADI_CT_2015_Imp[is.na(ReADI_CT_2015_Imp$B19013_001), c("GEOID", "Tract", "County", "State", "B01003_001")] 
-B25064_001_NAs <- ReADI_CT_2015_Imp[is.na(ReADI_CT_2015_Imp$B25064_001), c("GEOID", "Tract", "County", "State", "B01003_001")] 
-B25077_001_NAs <- ReADI_CT_2015_Imp[is.na(ReADI_CT_2015_Imp$B25077_001), c("GEOID", "Tract", "County", "State", "B01003_001")] 
-B25088_002_NAs <- ReADI_CT_2015_Imp[is.na(ReADI_CT_2015_Imp$B25088_002), c("GEOID", "Tract", "County", "State", "B01003_001")] 
-CT_Missing <- merge(B19013_001_NAs, B25064_001_NAs, all = T)
-CT_Missing <- merge(CT_Missing, B25077_001_NAs, all = T)
-CT_Missing <- merge(CT_Missing, B25088_002_NAs, all = T)
-CT_rm <- c("06111980000", "12087980100", "26083980100")
-ReADI_CT_2015_Imp <- ReADI_CT_2015_Imp[!ReADI_CT_2015_Imp$GEOID %in% CT_rm, ] # 72421 remaining - 4 removed
-save(ReADI_CT_2015_Imp, file = "ReADI_CT_2015_Imp.RData")
+<br><br>
+
+### Census Tracts
+
+------------------------------------------------------------------------
+
+<br>
+
+Only three census tracts remain with missing values after imputation. The table below summarizes these tracts and their characteristics based on [Census Reporter](https://censusreporter.org/profiles/):
+
+:::: {style="margin:16px 0"}
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855"><h4 class="text-white">CT NAs</h4></button></center>
+::: {#code855 .collapse}
+| GEOID | CT | Location | Population | CT Information |
+|:--------------|:--------------|:--------------|:--------------|:--------------|
+| 06111980000 | 9800 | Ventura County, CA | 110 | Naval Facility San Nicolas Island. |
+| 12087980100 | 9801 | Monroe County, FL | 8 | Dry Tortugas is a National Park. |
+| 26083980100 | 9801 | Keweenaw County, MI | 15 | Isle Royale Island is a National Park. |
+:::
+::::
+
+All remaining census tracts with NAs correspond to special-use geographies—either national parks (with very small resident populations, largely staff/rangers) or a naval facility—and will be removed from the analytic dataset. 
+
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code787">Show Code</button>
+::: {#code787 .collapse}
+```{r}
+na_list <- lapply(vars, function(v) ReADI_CT_2015_Imp[is.na(ReADI_CT_2015_Imp[[v]]), c("GEOID", "Tract", "County", "State")])
+CT_Missing <- unique(do.call(rbind, na_list))
+ReADI_CT_2015_Imp <- ReADI_CT_2015_Imp[!ReADI_CT_2015_Imp$GEOID %in% CT_Missing$GEOID, ]
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
 > Census Block Groups
 
-Observing the specific census block groups which remain NAs after imputation summarized in the table below: 
+Sixteen census block groups (CBGs) remain with missing values after block-group–level imputation. Of these 16, four are located within the census tracts removed above, and an additional three represent special-use geographies (e.g., national parks or similar areas) that are not appropriate for inclusion in a residential deprivation index; these CBGs will be removed as indicated in the table. For the remaining CBGs, the predominant reason imputation failed is that they do not directly border any other CBGs from which to borrow information. In these cases, we impute using the value from the census tract (CT) in which the CBG is nested. The table below lists the affected CBGs and their characteristics using [Census Reporter](https://censusreporter.org/profiles/):
 
+:::: {style="margin:16px 0"}
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855"><h4 class="text-white">CBG NAs</h4></button></center>
+::: collapse
+| GEOID | CBG.CT | Location | Population | CT Information | Removed |
+|:-----------|:-----------|:-----------|:-----------|:-----------|:-----------|
+| 061119800001 | 1.9800 | Ventura County, CA | 110 | Naval Facility San Nicolas Island | <strong><strong>X</strong></strong> |
+| 060375991001 | 1.5991 | Los Angeles County, CA | 158 | San Clemente Islands |  |
+| 120879801001 | 1.9801 | Monroe County, FL | 8 | Dry Tortugas is a National Park | <strong><strong>X</strong></strong> |
+| 260839801001 | 1.9801 | Keweenaw County, MI | 15 | Isle Royale Island is a National Park | <strong><strong>X</strong></strong> |
+| 360610240001 | 1.240 | New York County, NY | 1,688 |  |  |
+| 360050001001 | 1.1 | Bronx County, NY | 7,703 | Rikers Island Prison | <strong><strong>X</strong></strong> |
+| 440050401031 | 1.401.03 | Newport County, RI | 108 |  |  |
+| 440050401033 | 3.401.03 | Newport County, RI | 234 |  |  |
+| 440050411002 | 2.411 | Newport County, RI | 51 |  |  |
+| 530530726035 | 5.726.03 | Pierce County, WA | 419 | McNeil Island |  |
+| 230139711004 | 4.9711 | Knox County, ME. | 124 | Isle au Haut and Matinicus Isle |  |
+| 230159756005 | 5.9756 | Lincoln County, ME | 34 | Monhegan Island |  |
+| 250072004006 | 6.2004 | Dukes County, MA | 75 | Gosnold |  |
+| 260979505001 | 1.9505 | Mackinac County, MI | 78 | Bois Blanc Island |  |
+| 390430419004 | 4.419 | Erie County, OH | 138 | Kelleys Island |  |
+| 510010906001 | 1.906 | Accomack County, VA | 491 | Tangier Island |  |
+:::
+::::
 
-<div style="margin:16px 0">
- <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code855"><h4 class="text-white">CBG NAs></h4></button></center>
-  <div id="code855" class="collapse">
-|GEOID       |CBG.CT   |Location                  |Population|CT Information                        |Removed|
-|:-----------|:--------|:-------------------------|:---------|:-------------------------------------|:------|
-|060375991001|1.5991   |Los Angeles County, CA    |158       |San Clemente Islands                  |       |
-|061119800001|1.9800   |Ventura County, CA        |110       |Naval Facility San Nicolas Island     |<strong><strong>X</strong></strong>|
-|120879801001|1.9801   |Monroe County, FL         |8         |Dry Tortugas is a National Park       |<strong><strong>X</strong></strong>|
-|230139711004|4.9711   |Knox County, ME.          |124       |Isle au Haut and Matinicus Isle       |       |
-|230159756005|5.9756   |Lincoln County, ME        |34        |Monhegan Island                       |       |
-|250072004006|6.2004   |Dukes County, MA          |75        |Gosnold                               |       |
-|260839801001|1.9801   |Keweenaw County, MI       |15        |Isle Royale Island is a National Park |<strong><strong>X</strong></strong>|
-|260979505001|1.9505   |Mackinac County, MI       |78        |Bois Blanc Island                     |       |
-|360050001001|1.1      |Bronx County, NY          |7,703     |Rikers Island Prison                  |<strong><strong>X</strong></strong>|
-|360610240001|1.240    |New York County, NY       |1,688     |                                      |       |
-|390430419004|4.419    |Erie County, OH           |138       |Kelleys Island                        |       |
-|440050401031|1.401.03 |Newport County, RI        |108       |                                      |       |
-|440050401033|3.401.03 |Newport County, RI        |234       |                                      |       |
-|440050411002|2.411    |Newport County, RI        |51        |                                      |       |
-|510010906001|1.906    |Accomack County, VA       |491       |Tangier Island                        |       |
-|530530726035|5.726.03 |Pierce County, WA         |419       |McNeil Island                         |       |
-  </div>
-</div>
-
-Of the CBGs which remain missing after imputation it is clear that the vast majority of them were not imputed due to simply not directly bordering any other CBGs. These will be given the values attributed to the CT they are a part of for imputation. There are a few which will be removed as indicated in the removed column above based on if they represent national parks containing small population of rangers and areas consisting fully of group quarters.
-
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code860">Show Code</button>
-  <div id="code860" class="collapse">
-```{r, eval = F}
-load("ReADI_CBG_2015_Imp.RData")
-load("ReADI_CT_2015_Imp.RData")
-B19013_001_NAs <- ReADI_CBG_2015_Imp[is.na(ReADI_CBG_2015_Imp$B19013_001), c("GEOID", "Tract", "County", "State", "B01003_001")] # 10
-B25064_001_NAs <- ReADI_CBG_2015_Imp[is.na(ReADI_CBG_2015_Imp$B25064_001), c("GEOID", "Tract", "County", "State", "B01003_001")] # 16
-B25077_001_NAs <- ReADI_CBG_2015_Imp[is.na(ReADI_CBG_2015_Imp$B25077_001), c("GEOID", "Tract", "County", "State", "B01003_001")] # 8
-B25088_002_NAs <- ReADI_CBG_2015_Imp[is.na(ReADI_CBG_2015_Imp$B25088_002), c("GEOID", "Tract", "County", "State", "B01003_001")] # 10
-CBG_Missing <- merge(B19013_001_NAs, B25064_001_NAs, all = T)
-CBG_Missing <- merge(CBG_Missing, B25077_001_NAs, all = T)
-CBG_Missing <- merge(CBG_Missing, B25088_002_NAs, all = T)
-CBG_Missing <- unique(CBG_Missing)
-CBG_rm <- c("061119800001", "120879801001", "260839801001", "360050001001")
-ReADI_CBG_2015_Imp <- ReADI_CBG_2015_Imp[!ReADI_CBG_2015_Imp$GEOID %in% CBG_rm, ] # 216701 to 216697 remaining - 4 removed
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code860">Show Code</button>
+::: {#code860 .collapse}
+```{r}
+bad_len <- which(is.na(ReADI_CBG_2015_Imp$GEOID) | nchar(ReADI_CBG_2015_Imp$GEOID) != 12)
+if (length(bad_len) > 0) {
+  stop("Found invalid CBG GEOIDs (NA or not 12 chars). Example rows: ",
+       paste(head(bad_len, 10), collapse = ", "))
+}
+cbg_na_list <- lapply(vars, function(v) ReADI_CBG_2015_Imp[is.na(ReADI_CBG_2015_Imp[[v]]), c("GEOID", "Tract", "County", "State")])
+CBG_Missing <- unique(do.call(rbind, cbg_na_list))
+CBG_Missing$GEOID_CT <- substr(CBG_Missing$GEOID, 1, 11)
+CBG_rm <- CBG_Missing[CBG_Missing$GEOID_CT %in% CT_Missing$GEOID,]$GEOID
+ReADI_CBG_2015_Imp <- ReADI_CBG_2015_Imp[!ReADI_CBG_2015_Imp$GEOID %in% CBG_rm, ]
 ```
-  </div>
-</div>
-  
+:::
+::::
+
 <br><br>
 
-### Imputing Remaining CBGs
-***
+### Final CBG Imputation Using Tract Values
 
-The remaining CBGs will be imputed with the CT measure they are located in resulting in the final results:
+------------------------------------------------------------------------
 
-<div class = "row">
-<div class = "col-md-4">
-|Area   |NAs |Amount  |
-|:------|:---|:-------|
-|CBG    |0   |216,697 |
-|CT     |0   |72,421  |
-|C      |0   |3,142   |
+<br>
 
-</div>
+The remaining CBGs with missing values after the steps above are imputed using the corresponding census tract level values for the same variables. This preserves information from the broader local context while avoiding arbitrary spatial borrowing across unrelated areas. Table below summarizes the final counts of units retained at each geographic level (block group, tract, county) after all imputation and exclusion steps.
 
-<div class = "col-md-8">
-</div>
-</div>
+::::: row
+::: col-md-4
+:::
 
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1019">Show Code</button>
-  <div id="code1019" class="collapse">
-```{r, eval = F}
-impute_CBG_geo <- CBG_Missing[!CBG_Missing$GEOID %in% CBG_rm, "GEOID"]
-impute_CT_geo <- sapply(length(impute_CBG_geo), function(x){
-  substring(impute_CBG_geo, 1, 11)
-})
-impute_CT_geo <- impute_CT_geo[,1]
+::: col-md-4
+| Area | NAs | Amount  |
+|:-----|:----|:--------|
+| CBG  | 0   | 216,698 |
+| CT   | 0   | 72,421  |
+| C    | 0   | 3,142   |
+:::
 
-impute_data <- ReADI_CT_2015_Imp[ReADI_CT_2015_Imp$GEOID %in% impute_CT_geo, c("GEOID", "B19013_001", "B25064_001", "B25077_001", "B25088_002")]
+::: col-md-4
+:::
+:::::
+
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1019">Show Code</button>
+::: {#code1019 .collapse}
+```{r}
+impute_CBG_geo <- CBG_Missing[!CBG_Missing$GEOID %in% CBG_rm,]
+impute_data <- ReADI_CT_2015_Imp[ReADI_CT_2015_Imp$GEOID %in% impute_CBG_geo$GEOID_CT, c("GEOID", vars)]
+colnames(impute_data) <- paste(colnames(impute_data), "_CT", sep = "")
 ReADI_CBG_2015_Imp$GEOID_CT <- substring(ReADI_CBG_2015_Imp$GEOID, 1, 11)
-ReADI_CBG_2015_Imp$B19013_001_T <- ReADI_CBG_2015_Imp$B19013_001
-ReADI_CBG_2015_Imp$B25064_001_T <- ReADI_CBG_2015_Imp$B25064_001
-ReADI_CBG_2015_Imp$B25077_001_T <- ReADI_CBG_2015_Imp$B25077_001
-ReADI_CBG_2015_Imp$B25088_002_T <- ReADI_CBG_2015_Imp$B25088_002
-
-# B19013_001
-CBG_Imp <- as.data.frame(sapply(1:nrow(impute_data), function(x){
-  ifelse(ReADI_CBG_2015_Imp$GEOID_CT == impute_data[x, "GEOID"] & is.na(ReADI_CBG_2015_Imp[,"B19013_001_T"]), impute_data[x,"B19013_001"], ReADI_CBG_2015_Imp$B19013_001_T)
-}))
-ReADI_CBG_2015_Imp$B19013_001 <- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11])
-cor.test(ReADI_CBG_2015_Imp$B19013_001_T, ReADI_CBG_2015_Imp$B19013_001)
-sum(is.na(ReADI_CBG_2015_Imp$B19013_001_T))
-sum(is.na(ReADI_CBG_2015_Imp$B19013_001))
-
-# B25064_001
-CBG_Imp <- as.data.frame(sapply(1:nrow(impute_data), function(x){
-  ifelse(ReADI_CBG_2015_Imp$GEOID_CT == impute_data[x, "GEOID"] & is.na(ReADI_CBG_2015_Imp[,"B25064_001_T"]), impute_data[x,"B25064_001"], ReADI_CBG_2015_Imp$B25064_001_T)
-}))
-ReADI_CBG_2015_Imp$B25064_001 <- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11])
-cor.test(ReADI_CBG_2015_Imp$B25064_001_T, ReADI_CBG_2015_Imp$B25064_001)
-sum(is.na(ReADI_CBG_2015_Imp$B25064_001_T))
-sum(is.na(ReADI_CBG_2015_Imp$B25064_001))
-
-# B25077_001
-CBG_Imp <- as.data.frame(sapply(1:nrow(impute_data), function(x){
-  ifelse(ReADI_CBG_2015_Imp$GEOID_CT == impute_data[x, "GEOID"] & is.na(ReADI_CBG_2015_Imp[,"B25077_001_T"]), impute_data[x,"B25077_001"], ReADI_CBG_2015_Imp$B25077_001_T)
-}))
-ReADI_CBG_2015_Imp$B25077_001 <- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11])
-cor.test(ReADI_CBG_2015_Imp$B25077_001_T, ReADI_CBG_2015_Imp$B25077_001)
-sum(is.na(ReADI_CBG_2015_Imp$B25077_001_T))
-sum(is.na(ReADI_CBG_2015_Imp$B25077_001))
-
-# B25088_002
-CBG_Imp <- as.data.frame(sapply(1:nrow(impute_data), function(x){
-  ifelse(ReADI_CBG_2015_Imp$GEOID_CT == impute_data[x, "GEOID"] & is.na(ReADI_CBG_2015_Imp[,"B25088_002_T"]), impute_data[x,"B25088_002"], ReADI_CBG_2015_Imp$B25088_002_T)
-}))
-ReADI_CBG_2015_Imp$B25088_002 <- coalesce(CBG_Imp[,1],CBG_Imp[,2],CBG_Imp[,3],CBG_Imp[,4],CBG_Imp[,5],CBG_Imp[,6],CBG_Imp[,7],CBG_Imp[,8],CBG_Imp[,9],CBG_Imp[,10],CBG_Imp[,11])
-cor.test(ReADI_CBG_2015_Imp$B25088_002_T, ReADI_CBG_2015_Imp$B25088_002)
-sum(is.na(ReADI_CBG_2015_Imp$B25088_002_T))
-sum(is.na(ReADI_CBG_2015_Imp$B25088_002))
-
-ReADI_CBG_2015_Imp$GEOID_CT <- NULL
-ReADI_CBG_2015_Imp$B19013_001_T <- NULL
-ReADI_CBG_2015_Imp$B25064_001_T <- NULL
-ReADI_CBG_2015_Imp$B25077_001_T <- NULL
-ReADI_CBG_2015_Imp$B25088_002_T <- NULL
-sum(is.na(ReADI_CBG_2015_Imp)) # 0
-save(ReADI_CBG_2015_Imp, file = "ReADI_CBG_2015_Imp.RData")
+ReADI_CBG_2015_Imp <- plyr::join(ReADI_CBG_2015_Imp, impute_data, by = "GEOID_CT", type = "left")
+ReADI_CBG_2015_Imp[vars] <- lapply(vars, function(v) {ifelse(is.na(ReADI_CBG_2015_Imp[[v]]), ReADI_CBG_2015_Imp[[paste0(v, "_CT")]], ReADI_CBG_2015_Imp[[v]])})
+ReADI_CBG_2015_Imp[c("GEOID_CT", paste0(vars, "_CT"))] <- NULL
 
 sum(is.na(ReADI_CBG_2015_Imp))
 sum(is.na(ReADI_CT_2015_Imp))
 sum(is.na(ReADI_C_2015_Imp))
 ```
-  </div>
-</div>
+:::
+::::
+
+With all preprocessing complete, including variable assembly, population filtering, spatial imputation, and resolution of remaining missing values, the analytic datasets for counties, census tracts, and block groups are now fully prepared for index construction. The following section implements the ReADI model itself: calculating component variables, fitting the population-weighted factor model, extracting loadings and factor scores, and generating the final ReADI values and national percentile ranks for each geographic unit.
 
 <br><br>
 
@@ -1054,109 +979,102 @@ sum(is.na(ReADI_C_2015_Imp))
 
 <br>
 
-These steps are done separately at the county, census tract, and census block group levels. 
+The steps below describe how ReADI is constructed at each geographic level (county, census tract, and census block group). Although the same procedure is applied across all three geographies, the models are estimated independently within each level so that the resulting loadings and scores are geographically appropriate.
 
-<strong><strong>1.</strong></strong> Using the imputed census data taken at each geography the 17 variables will be calculated. Below is a table summarizing the variables, census tables, and formulas we will be using to calculate the ReADI:
+<strong><strong>1. Construct the 17 component variables:</strong></strong> Using the imputed ACS data for each geography, we compute the 17 deprivation-related component variables used in ReADI. These variables represent domains such as income, education, employment, housing cost burden, household composition, and infrastructure access. Table below summarizes each variable, the corresponding ACS table or cell, and the formula used in its construction.
 
-<div style="margin:16px 0">
- <center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1111"><h4 class="text-white">CBG ReADI Variables</h4></button></center>
-  <div id="code1111" class="collapse">
-+-----------------------------------------------------------------------+---------+-------+:----------------------------------------------:+
-|Census Variable                                                        |Name     |Table  |<center>Formula</center>                        |
-+=======================================================================+=========+=======+:==============================================:+
-|Median family income, \$                                               |MEDFI    |B19013 |$001$                                           |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Income disparity$^a$                                                   |INCDIS   |B19001 |$ln({\sum(002-004)+1\over\sum(014-017)+1}x100)$|
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Families below poverty level, %                                        |BELPL    |B17017 |${002\over001}x100$                             |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Population below 150% of the poverty threshold, %                      |PL150    |C17002 |${\sum(002-005)\over 001}x100$                  |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Population ≥25y with < a high school diploma, %                        |EDU9YR   |B15003 |${\sum(002-016)\over 001}x100$                  |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Population ≥25y with at least a bachelor's degree, %                   |HSDPNHIGH|B15003 |${\sum(022-025)\over 001}x100$                  |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Employed persons ≥16y in white-collar occupations, %                   |EMPWC    |C24010 |${\sum(003,027,039,063)\over 001}x100$          |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Civilian labor force population ≥16 y unemployed, %                    |UNEMP    |B23025 |${005\over003}x100$                             |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Median home value, \$                                                  |MEDHV    |B25077 |$001$                                           |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Median gross rent, \$                                                  |MEDRNT   |B25064 |$001$                                           |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Median monthly mortgage, \$                                            |MEDMORT  |B25088 |$002$                                           |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Owner-occupied housing units, %                                        |OWN      |B25003 |${002\over001}x100$                             |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Single-parent households with children <18y, %                         |SNGPNT   |B11005 |${\sum(006-007)\over 001}x100$                  |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Households without a motor vehicle, %                                  |NOVEH    |B25044 |${\sum(010,003)\over 001}x100$                  |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Households without internet, %                                         |NOINT    |B25043 |${\sum(007,016)\over 001}x100$                  |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Occupied housing units without complete plumbing, %                    |NOPLUM   |B25049 |$ln({\sum(004,007)+1\over001+1}x100)$          |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-|Households with more than 1 person per room, %                         |CROWD    |B25014 |${\sum(005-007,011-013)\over 001}x100$          |
-+-----------------------------------------------------------------------+---------+-------+------------------------------------------------+
-*<sup>$^a$ Income disparity in 2015 was defined as the log of 100×ratio of number of households with <\$20,000 income to number of households with ≥\$100,000 income.</sup>*
-  </div>
-</div>
+:::: {style="margin:16px 0"}
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1111"><h4 class="text-white">CBG ReADI Variables</h4></button></center>
+::: collapse
+| Census Variable | Name | Table |   |
+|------------------------|----------------|----------------|:--------------:|
+| Median family income, \$ | MEDFI | B19013 | $001$ |
+| Income disparity$^a$ | INCDIS | B19001 | $ln({\sum(002-004)+1\over\sum(014-017)+1}x100)$\| |
+| Families below poverty level, % | BELPL | B17017 | ${002\over001}x100$ |
+| Population below 150% of the poverty threshold, % | PL150 | C17002 | ${\sum(002-005)\over 001}x100$ |
+| Population ≥25y with \< a high school diploma, % | EDU9YR | B15003 | ${\sum(002-016)\over 001}x100$ |
+| Population ≥25y with at least a bachelor's degree, % | HSDPNHIGH | B15003 | ${\sum(022-025)\over 001}x100$ |
+| Employed persons ≥16y in white-collar occupations, % | EMPWC | C24010 | ${\sum(003,027,039,063)\over 001}x100$ |
+| Civilian labor force population ≥16 y unemployed, % | UNEMP | B23025 | ${005\over003}x100$ |
+| Median home value, \$ | MEDHV | B25077 | $001$ |
+| Median gross rent, \$ | MEDRNT | B25064 | $001$ |
+| Median monthly mortgage, \$ | MEDMORT | B25088 | $002$ |
+| Owner-occupied housing units, % | OWN | B25003 | ${002\over001}x100$ |
+| Single-parent households with children \<18y, % | SNGPNT | B11005 | ${\sum(006-007)\over 001}x100$ |
+| Households without a motor vehicle, % | NOVEH | B25044 | ${\sum(010,003)\over 001}x100$ |
+| Households without internet, % | NOINT | B25043 | ${\sum(007,016)\over 001}x100$ |
+| Occupied housing units without complete plumbing, % | NOPLUM | B25049 | $ln({\sum(004,007)+1\over001+1}x100)$ \| |
+| Households with more than 1 person per room, % | CROWD | B25014 | ${\sum(005-007,011-013)\over 001}x100$ |
 
-<strong><strong>2.</strong></strong> Resulting NAs are converted to 0 as any found after calculation would be due to both the numerator and denominator being 0 and so will be converted to 0 as there are no true NAs in the data.
+<sup>$^a$ Income disparity in 2015 was defined as the log of 100×ratio of number of households with \<\$20,000 income to number of households with ≥\$100,000 income.</sup>
+:::
+::::
 
-<strong><strong>3.</strong></strong> The 17 calculated variables are standardized via zscore.
+<strong><strong>2. Resolve structural zeros:</strong></strong> Any remaining NAs after calculation are not true missing values. They occur only when both the numerator and denominator of a ratio are zero. These structural cases are converted to zero so that they do not propagate into later steps.
 
-<strong><strong>4.</strong></strong> Population weights are calculated using census variable B01003_001 (Universe: Total population) by dividing the areas population from the total population represented in the data labelled as POPWT. This value is then transformed where the square root + 1 is applied to account for the vastly different distributions across geographies and large skews to make them more comparable to one another.  
+<strong><strong>3. Standardize the component variables:</strong></strong> The 17 component variables are standardized using z-scores (mean = 0, standard deviation = 1). Standardization ensures that variables measured on different numerical scales (for example, percentages vs. dollar-valued medians) contribute appropriately to the factor analysis rather than being dominated by variables with large numeric ranges.
 
-<strong><strong>5.</strong></strong> Factor analysis is applied (fa function from the stats package) where population weights are applied, a 1 factor solution requested, and the factor method used is the principal factor solution. All other options were default.
+<strong><strong>4. Compute population weights:</strong></strong> Population size for each geographic unit is taken from ACS table **B01003_001** (total population). To reduce the influence of extremely large or small areas and to make population distributions more comparable across geographies, we transform the weights using: ${POPWT} = \sqrt{\text{population}} + 1$. These transformed weights are used as analytic weights in the factor model.
 
-<br><br>
+<strong><strong>5. Fit the factor model:</strong></strong> A one-factor model is estimated using the *fa()* function from the *psych* package. Key specifications, otherwise default was applied:
 
-> CBG
+-   method: principal factor extraction
+-   number of factors: 1
+-   weights: population-based POPWT
+
+This procedure produces the following core outputs for each geography:
+
+1.  **ReADI coefficients**: the estimated scoring coefficients for each of the 17 component variables, as derived from the one-factor model.
+2.  **Raw ReADI score**: a continuous ADI score for each unit based on the factor solution (unscaled).
+3.  **Nationally ranked ReADI score**: the raw ReADI score transformed to a 0–100 national rank, where higher values indicate greater deprivation.
+4.  **Factor loadings and weights**: the underlying loadings and scoring weights that describe how each component contributes to the factor and how scores are computed.
+
+Table below shows the number of NAs and the resulting factor weights for block groups.
+
+### Block group (CBG) ReADI
 
 <br>
 
-<div class = "row">
-<div class = "col-md-3">
-|Variable  |NAs |Weights|
-|:---------|:---|------:|
-|MEDFI     |0   |-0.268 |
-|INCDIS    |0   |0.166  |
-|BELPL     |429 |0.077  |
-|PL150     |362 |0.230  |
-|EDU9YR    |37  |0.073  |
-|HSDPNHIGH |37  |-0.106 |
-|EMPWC     |265 |-0.107 |
-|UNEMP     |249 |0.026  |
-|MEDHV     |0   |-0.028 |
-|MEDRNT    |0   |-0.037 |
-|MEDMORT   |0   |-0.010 |
-|OWN       |429 |0.013  |
-|SNGPNT    |429 |0.059  |
-|NOVEH     |429 |0.012  |
-|NOINT     |429 |0.024  |
-|NOPLUM    |0   |0.013  |
-|CROWD     |429 |0.029  |
-</div>
+Below are the factor weights and scoring coefficients estimated for block groups using the 2022 ACS data. These coefficients are applied to the standardized component variables to generate both the raw and nationally ranked ReADI scores at the CBG level. The code below performs the component construction, weighting, factor model estimation, and score generation for block groups.
 
-<div class = "col-md-1">
-</div>
+:::::::::: row
+::: col-md-4
+:::
+::::: col-md-4
+:::: {style="margin:16px 0"}
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1082"><h4 class="text-white">CBG Weights</h4></button></center>
+::: {#code1082 .collapse}
+| Variable  | NAs | Weights |
+|:----------|:----|--------:|
+| MEDFI     | 0   |  -0.268 |
+| INCDIS    | 0   |   0.166 |
+| BELPL     | 430 |   0.077 |
+| PL150     | 363 |   0.230 |
+| EDU9YR    | 37  |   0.073 |
+| HSDPNHIGH | 37  |  -0.106 |
+| EMPWC     | 266 |  -0.107 |
+| UNEMP     | 250 |   0.026 |
+| MEDHV     | 0   |  -0.028 |
+| MEDRNT    | 0   |  -0.037 |
+| MEDMORT   | 0   |  -0.010 |
+| OWN       | 430 |   0.013 |
+| SNGPNT    | 430 |   0.059 |
+| NOVEH     | 430 |   0.012 |
+| NOINT     | 430 |   0.024 |
+| NOPLUM    | 0   |   0.013 |
+| CROWD     | 430 |   0.029 |
+:::
+::::
+:::::
 
-<div class = "col-md-6">
-The table describes the amount of NAs which resulted from the 17 variable calculations and which were subsequently converted to 0 and the weights resulting from factor analysis. The code produced several products, the zscore standardized 17 composite variables, a raw ReADI score which can be used to subset down to whichever geographical area is relevant for a user's purposed and then re-scaled from 0-100, and then a nationally representative ADI scaled from 0-100. The ReADI_2015_CBG_RawVars.RData file has the 17 variables prior to zscore them.
-</div>
+::::: col-md-4
+:::::
+::::::::::
 
-<div class = "col-md-2">
-</div>
-</div>
-
-
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1019">Show Code</button>
-  <div id="code1019" class="collapse">
-```{r, eval = F}
-load("ReADI_CBG_2015_Imp.RData")
-
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1019">Show Code</button>
+::: collapse
+```{r}
 ReADI_CBG_2015 <- dplyr::mutate(ReADI_CBG_2015_Imp,
     MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
@@ -1175,28 +1093,14 @@ ReADI_CBG_2015 <- dplyr::mutate(ReADI_CBG_2015_Imp,
     NOINT = (B25043_007 + B25043_016)/B25043_001*100,
     NOPLUM = log((B25049_007 + B25049_004 + 1)/(B25049_001 + 1)*100),
     CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
-    POPWT = B01003_001
+    POPWT = log(B01003_001)
 ) %>%
-  select(GEOID, Block_Group, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT
-)
-hist(ReADI_CBG_2015$POPWT)
-ReADI_CBG_2015$POPWT <- log(ReADI_CBG_2015$POPWT)
+  select(GEOID, Block_Group, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT)
 
 # Replacing NA values resulting from 0 values back to 0. 
+colSums(is.na(ReADI_CBG_2015_Imp))
 colSums(is.na(ReADI_CBG_2015))
-ReADI_CBG_2015$BELPL <- ifelse(is.na(ReADI_CBG_2015$BELPL), 0, ReADI_CBG_2015$BELPL)
-ReADI_CBG_2015$PL150 <- ifelse(is.na(ReADI_CBG_2015$PL150), 0, ReADI_CBG_2015$PL150)
-ReADI_CBG_2015$EDU9YR <- ifelse(is.na(ReADI_CBG_2015$EDU9YR), 0, ReADI_CBG_2015$EDU9YR)
-ReADI_CBG_2015$HSDPNHIGH <- ifelse(is.na(ReADI_CBG_2015$HSDPNHIGH), 0, ReADI_CBG_2015$HSDPNHIGH)
-ReADI_CBG_2015$EMPWC <- ifelse(is.na(ReADI_CBG_2015$EMPWC), 0, ReADI_CBG_2015$EMPWC)
-ReADI_CBG_2015$UNEMP <- ifelse(is.na(ReADI_CBG_2015$UNEMP), 0, ReADI_CBG_2015$UNEMP)
-ReADI_CBG_2015$OWN <- ifelse(is.na(ReADI_CBG_2015$OWN), 0, ReADI_CBG_2015$OWN)
-ReADI_CBG_2015$SNGPNT <- ifelse(is.na(ReADI_CBG_2015$SNGPNT), 0, ReADI_CBG_2015$SNGPNT)
-ReADI_CBG_2015$NOVEH <- ifelse(is.na(ReADI_CBG_2015$NOVEH), 0, ReADI_CBG_2015$NOVEH)
-ReADI_CBG_2015$NOINT <- ifelse(is.na(ReADI_CBG_2015$NOINT), 0, ReADI_CBG_2015$NOINT)
-ReADI_CBG_2015$CROWD <- ifelse(is.na(ReADI_CBG_2015$CROWD), 0, ReADI_CBG_2015$CROWD)
-ReADI_2015_CBG_RawVars <- ReADI_CBG_2015
-save(ReADI_2015_CBG_RawVars, file = "ReADI_2015_CBG_RawVars.RData")
+ReADI_CBG_2015[is.na(ReADI_CBG_2015)] <- 0
 
 ADI_short <- ReADI_CBG_2015[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
 rownames(ADI_short) <- ADI_short$GEOID
@@ -1205,102 +1109,81 @@ ADI_short$GEOID <- NULL
 # zscore transform
 ADI_short <- as.data.frame(scale(ADI_short))
 
-# Checking NAs and Inf values
-NA_INF_CBG <- as.data.frame(t(sapply(1:ncol(ADI_short), function(x){
-  NAs <- sum(is.na(ADI_short[,x]))
-  Infs <- sum(is.infinite(ADI_short[,x]))
-  c(NAs, Infs)
-})))
-colnames(NA_INF_CBG) <- c("NA", "Infinite")
-rownames(NA_INF_CBG) <- colnames(ADI_short)
-
-# Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
-identical(rownames(ADI_short), ReADI_CBG_2015$GEOID)
+# Factor analysis is performed with a one factor solution
+stopifnot(identical(rownames(ADI_short), ReADI_CBG_2015$GEOID))
 adi.fa <- fa(ADI_short, nfactors = 1, fm = "pa", weight = ReADI_CBG_2015$POPWT)
+
+# Loadings
+ReADI_2015_Loadings <- as.data.frame(loadings(adi.fa)[])
+colnames(ReADI_2015_Loadings) <- "CBG"
+ReADI_2015_Loadings$Vars <- rownames(ReADI_2015_Loadings)
+ReADI_2015_Loadings <- ReADI_2015_Loadings[,c(2,1)]
+
+# Weights
 ReADI_2015_Wt <- as.data.frame(adi.fa$weights)
 colnames(ReADI_2015_Wt) <- "CBG"
 ReADI_2015_Wt$Vars <- rownames(ReADI_2015_Wt)
 ReADI_2015_Wt <- ReADI_2015_Wt[,c(2,1)]
-save(ReADI_2015_Wt, file = "ReADI_2015_Wt.RData")
 
-# Applying new weights coefficients to zscore data
-identical(rownames(ReADI_2015_Wt), colnames(ADI_short))
-ReADI_CBG_2015 <- as.data.frame(do.call(cbind,lapply(1:nrow(ReADI_2015_Wt), function(x){
-  ADI_short[,x]*ReADI_2015_Wt[x,"CBG"]
-})))
-colnames(ReADI_CBG_2015) <- colnames(ADI_short)
-rownames(ReADI_CBG_2015) <- rownames(ADI_short)
-
-# Summing the weighted measures per CBG
-ReADI_CBG_2015$ReADI_CBG_Raw <- rowSums(ReADI_CBG_2015, na.rm = F)
-sum(is.na(ReADI_CBG_2015$ReADI_CBG_Raw)) # 0
-ReADI_CBG_2015$GEOID <- rownames(ReADI_CBG_2015)
-
-# There is subsequent percentile ranking done for relative comparisons of CBG nationally.
-ReADI_CBG_2015$ReADI_CBG_NR <- round(percent_rank(ReADI_CBG_2015$ReADI_CBG_Raw)*100, 0)
-
-# Range of variables after weights applied
-Range_CBG <- as.data.frame(t(sapply(1:17, function(x){
-  Mid <- median(ReADI_CBG_2015[,x], na.rm = T)
-  Min <- range(ReADI_CBG_2015[,x], na.rm = T)[1]
-  Max <- range(ReADI_CBG_2015[,x], na.rm = T)[2]
-  Dif <- Max - Min
-  c(Mid, Min, Max, Dif)
-})))
-colnames(Range_CBG) <- c("Median", "Min", "Max", "Dif")
-rownames(Range_CBG) <- colnames(ReADI_CBG_2015)[1:17]
+# Pulling the raw scores as the raw ReADI, producing the ReADI on a scale of 0-100
+ADI <- as.data.frame(adi.fa$scores)
+colnames(ADI) <- c("ReADI_CBG_Raw")
+stopifnot(identical(rownames(ADI), ReADI_CBG_2015$GEOID))
+ADI$ReADI_CBG_NR <- round(percent_rank(ADI$ReADI_CBG_Raw)*100, 0)
+ADI$GEOID <- rownames(ADI)
+ReADI_CBG_2015 <- plyr::join(ReADI_CBG_2015, ADI, by = "GEOID")
 save(ReADI_CBG_2015, file = "ReADI_CBG_2015.RData")
+write.csv(ReADI_CBG_2015, file = "ReADI_CBG_2015.csv")
 ```
-  </div>
-</div>
+:::
+::::
 
 <br><br>
 
-> CT
+### Census tract (CT) ReADI
 
 <br>
 
-<div class = "row">
-<div class = "col-md-3">
-|Variable  |NAs |Weights|
-|:---------|:---|------:|
-|MEDFI     |0   |-0.297 |
-|INCDIS    |0   |0.242  |
-|BELPL     |175 |0.011  |
-|PL150     |143 |0.286  |
-|EDU9YR    |10  |0.062  |
-|HSDPNHIGH |10  |-0.041 |
-|EMPWC     |114 |-0.136 |
-|UNEMP     |110 |0.012  |
-|MEDHV     |0   |-0.038 |
-|MEDRNT    |0   |0.002  |
-|MEDMORT   |0   |0.060  |
-|OWN       |175 |0.063  |
-|SNGPNT    |175 |0.083  |
-|NOVEH     |175 |-0.003 |
-|NOINT     |175 |0.026  |
-|NOPLUM    |0   |0.011  |
-|CROWD     |175 |0.015  |
-</div>
+This section applies the same ReADI procedure at the census tract level. The table below shows the tract-specific factor loadings and scoring coefficients. The code that follows constructs the 17 tract-level component variables, applies population weighting, fits the factor model, and produces both the raw and nationally ranked ReADI values for census tracts.
 
-<div class = "col-md-1">
-</div>
+:::::::::: row
+::: col-md-4
+:::
+::::: col-md-4
+:::: {style="margin:16px 0"}
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1190"><h4 class="text-white">CT Weights</h4></button></center>
+::: {#code1190 .collapse}
+| Variable  | NAs | Weights |
+|:----------|:----|--------:|
+| MEDFI     | 0   |  -0.297 |
+| INCDIS    | 0   |   0.242 |
+| BELPL     | 175 |   0.011 |
+| PL150     | 143 |   0.286 |
+| EDU9YR    | 10  |   0.062 |
+| HSDPNHIGH | 10  |  -0.041 |
+| EMPWC     | 114 |  -0.136 |
+| UNEMP     | 110 |   0.012 |
+| MEDHV     | 0   |  -0.038 |
+| MEDRNT    | 0   |   0.002 |
+| MEDMORT   | 0   |   0.060 |
+| OWN       | 175 |   0.063 |
+| SNGPNT    | 175 |   0.083 |
+| NOVEH     | 175 |  -0.003 |
+| NOINT     | 175 |   0.026 |
+| NOPLUM    | 0   |   0.011 |
+| CROWD     | 175 |   0.015 |
+:::
+::::
+:::::
 
-<div class = "col-md-6">
-The table describes the amount of NAs which resulted from the 17 variable calculations and which were subsequently converted to 0 and the weights resulting from factor analysis. The code produced several products, the zscore standardized 17 composite variables, a raw ReADI score which can be used to subset down to whichever geographical area is relevant for a user's purposed and then re-scaled from 0-100, and then a nationally representative ADI scaled from 0-100. The ReADI_2015_CT_RawVars.RData file has the 17 variables prior to zscore them.
-</div>
+::::: col-md-4
+:::::
+::::::::::
 
-<div class = "col-md-2">
-</div>
-</div>
-
-
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1340">Show Code</button>
-  <div id="code1340" class="collapse">
-```{r, eval = F}
-load("ReADI_CT_2015_Imp.RData")
-
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1340">Show Code</button>
+::: {#code1340 .collapse}
+```{r}
 ReADI_CT_2015 <- dplyr::mutate(ReADI_CT_2015_Imp,
     MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
@@ -1319,28 +1202,14 @@ ReADI_CT_2015 <- dplyr::mutate(ReADI_CT_2015_Imp,
     NOINT = (B25043_007 + B25043_016)/B25043_001*100,
     NOPLUM = log((B25049_007 + B25049_004 + 1)/(B25049_001 + 1)*100),
     CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
-    POPWT = B01003_001
+    POPWT = log(B01003_001)
 ) %>%
-  select(GEOID, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT
-)
-hist(ReADI_CT_2015$POPWT)
-ReADI_CT_2015$POPWT <- log(ReADI_CT_2015$POPWT)
+  select(GEOID, Tract, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT)
 
 # Replacing NA values resulting from 0 values back to 0. 
+colSums(is.na(ReADI_CT_2015_Imp))
 colSums(is.na(ReADI_CT_2015))
-ReADI_CT_2015$BELPL <- ifelse(is.na(ReADI_CT_2015$BELPL), 0, ReADI_CT_2015$BELPL)
-ReADI_CT_2015$PL150 <- ifelse(is.na(ReADI_CT_2015$PL150), 0, ReADI_CT_2015$PL150)
-ReADI_CT_2015$EDU9YR <- ifelse(is.na(ReADI_CT_2015$EDU9YR), 0, ReADI_CT_2015$EDU9YR)
-ReADI_CT_2015$HSDPNHIGH <- ifelse(is.na(ReADI_CT_2015$HSDPNHIGH), 0, ReADI_CT_2015$HSDPNHIGH)
-ReADI_CT_2015$EMPWC <- ifelse(is.na(ReADI_CT_2015$EMPWC), 0, ReADI_CT_2015$EMPWC)
-ReADI_CT_2015$UNEMP <- ifelse(is.na(ReADI_CT_2015$UNEMP), 0, ReADI_CT_2015$UNEMP)
-ReADI_CT_2015$OWN <- ifelse(is.na(ReADI_CT_2015$OWN), 0, ReADI_CT_2015$OWN)
-ReADI_CT_2015$SNGPNT <- ifelse(is.na(ReADI_CT_2015$SNGPNT), 0, ReADI_CT_2015$SNGPNT)
-ReADI_CT_2015$NOVEH <- ifelse(is.na(ReADI_CT_2015$NOVEH), 0, ReADI_CT_2015$NOVEH)
-ReADI_CT_2015$NOINT <- ifelse(is.na(ReADI_CT_2015$NOINT), 0, ReADI_CT_2015$NOINT)
-ReADI_CT_2015$CROWD <- ifelse(is.na(ReADI_CT_2015$CROWD), 0, ReADI_CT_2015$CROWD)
-ReADI_2015_CT_RawVars <- ReADI_CT_2015
-save(ReADI_2015_CT_RawVars, file = "ReADI_2015_CT_RawVars.RData")
+ReADI_CT_2015[is.na(ReADI_CT_2015)] <- 0
 
 ADI_short <- ReADI_CT_2015[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
 rownames(ADI_short) <- ADI_short$GEOID
@@ -1349,100 +1218,77 @@ ADI_short$GEOID <- NULL
 # zscore transform
 ADI_short <- as.data.frame(scale(ADI_short))
 
-# Checking NAs and Inf values
-NA_INF_CT <- as.data.frame(t(sapply(1:ncol(ADI_short), function(x){
-  NAs <- sum(is.na(ADI_short[,x]))
-  Infs <- sum(is.infinite(ADI_short[,x]))
-  c(NAs, Infs)
-})))
-colnames(NA_INF_CT) <- c("NA", "Infinite")
-rownames(NA_INF_CT) <- colnames(ADI_short)
-
 # Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
-load("ReADI_2015_Wt.RData")
-identical(rownames(ADI_short), ReADI_CT_2015$GEOID)
+stopifnot(identical(rownames(ADI_short), ReADI_CT_2015$GEOID))
 adi.fa <- fa(ADI_short, nfactors = 1, fm = "pa", weight = ReADI_CT_2015$POPWT)
+
+# Loadings
+identical(colnames(adi.fa$residual),ReADI_2015_Loadings$Vars)
+ReADI_2015_Loadings$CT <- loadings(adi.fa)[,"PA1"]
+
+# Weights
 identical(colnames(adi.fa$residual),ReADI_2015_Wt$Vars)
 ReADI_2015_Wt$CT <- adi.fa$weights[,"PA1"]
-save(ReADI_2015_Wt, file = "ReADI_2015_Wt.RData")
 
-# Applying new weights coefficients to zscore data
-identical(rownames(ReADI_2015_Wt), colnames(ADI_short))
-ReADI_CT_2015 <- as.data.frame(do.call(cbind,lapply(1:nrow(ReADI_2015_Wt), function(x){
-  ADI_short[,x]*ReADI_2015_Wt[x,"CT"]
-})))
-colnames(ReADI_CT_2015) <- colnames(ADI_short)
-rownames(ReADI_CT_2015) <- rownames(ADI_short)
-
-# Summing the weighted measures per CBG
-ReADI_CT_2015$ReADI_CT_Raw <- rowSums(ReADI_CT_2015, na.rm = F)
-sum(is.na(ReADI_CT_2015$ReADI_CT_Raw)) # 0
-ReADI_CT_2015$GEOID <- rownames(ReADI_CT_2015)
-
-# There is subsequent percentile ranking done for relative comparisons of CBG nationally.
-ReADI_CT_2015$ReADI_CT_NR <- round(percent_rank(ReADI_CT_2015$ReADI_CT_Raw)*100, 0)
-
-# Range of variables after weights applied
-Range_CT <- as.data.frame(t(sapply(1:17, function(x){
-  Mid <- median(ReADI_CT_2015[,x], na.rm = T)
-  Min <- range(ReADI_CT_2015[,x], na.rm = T)[1]
-  Max <- range(ReADI_CT_2015[,x], na.rm = T)[2]
-  Dif <- Max - Min
-  c(Mid, Min, Max, Dif)
-})))
-colnames(Range_CT) <- c("Median", "Min", "Max", "Dif")
-rownames(Range_CT) <- colnames(ReADI_CT_2015)[1:17]
+# ReADI scores
+ADI <- as.data.frame(adi.fa$scores)
+colnames(ADI) <- c("ReADI_CT_Raw")
+stopifnot(identical(rownames(ADI), ReADI_CT_2015$GEOID))
+ADI$ReADI_CT_NR <- round(percent_rank(ADI$ReADI_CT_Raw)*100, 0)
+ADI$GEOID <- rownames(ADI)
+ReADI_CT_2015 <- plyr::join(ReADI_CT_2015, ADI, by = "GEOID")
 save(ReADI_CT_2015, file = "ReADI_CT_2015.RData")
+write.csv(ReADI_CT_2015, file = "ReADI_CT_2015.csv")
 ```
-  </div>
-</div>
+:::
+::::
 
 <br><br>
 
-> C
+### County (C) ReADI
 
 <br>
 
-<div class = "row">
-<div class = "col-md-3">
-|Variable  |NAs |Weights|
-|:---------|:---|------:|
-|MEDFI     |0   |-0.233 |
-|INCDIS    |0   |0.310  |
-|BELPL     |0   |0.028  |
-|PL150     |0   |0.194  |
-|EDU9YR    |0   |0.041  |
-|HSDPNHIGH |0   |-0.121 |
-|EMPWC     |0   |-0.074 |
-|UNEMP     |0   |-0.029 |
-|MEDHV     |0   |-0.096 |
-|MEDRNT    |0   |-0.018 |
-|MEDMORT   |0   |0.022  |
-|OWN       |0   |0.039  |
-|SNGPNT    |0   |0.079  |
-|NOVEH     |0   |-0.029 |
-|NOINT     |0   |0.024  |
-|NOPLUM    |0   |0.013  |
-|CROWD     |0   |0.051  |
-</div>
+Finally, the ReADI procedure is estimated at the county level. The table below displays the county-level factor loadings and scoring coefficients. The code below generates the component variables, applies analytic weights, fits the county factor model, and computes raw and nationally ranked ReADI scores for all counties.
 
-<div class = "col-md-1">
-</div>
+:::::::::: row
+::: col-md-4
+:::
+::::: col-md-4
+:::: {style="margin:16px 0"}
+<center><button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1295"><h4 class="text-white">C Weights</h4></button></center>
+::: {#code1295 .collapse}
+| Variable  | NAs | Weights |
+|:----------|:----|--------:|
+| MEDFI     | 0   |  -0.233 |
+| INCDIS    | 0   |   0.310 |
+| BELPL     | 0   |   0.028 |
+| PL150     | 0   |   0.194 |
+| EDU9YR    | 0   |   0.041 |
+| HSDPNHIGH | 0   |  -0.121 |
+| EMPWC     | 0   |  -0.074 |
+| UNEMP     | 0   |  -0.029 |
+| MEDHV     | 0   |  -0.096 |
+| MEDRNT    | 0   |  -0.018 |
+| MEDMORT   | 0   |   0.022 |
+| OWN       | 0   |   0.039 |
+| SNGPNT    | 0   |   0.079 |
+| NOVEH     | 0   |  -0.029 |
+| NOINT     | 0   |   0.024 |
+| NOPLUM    | 0   |   0.013 |
+| CROWD     | 0   |   0.051 |
+:::
+::::
+:::::
 
-<div class = "col-md-6">
-The table describes the amount of NAs which resulted from the 17 variable calculations and which were subsequently converted to 0 and the weights resulting from factor analysis. The code produced several products, the zscore standardized 17 composite variables, a raw ReADI score which can be used to subset down to whichever geographical area is relevant for a user's purposed and then re-scaled from 0-100, and then a nationally representative ADI scaled from 0-100. The ReADI_2015_C_RawVars.RData file has the 17 variables prior to zscore them.
-</div>
+::::: col-md-4
+:::::
+::::::::::
 
-<div class = "col-md-2">
-</div>
-</div>
-
-<div style="margin:16px 0">
-  <button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1488">Show Code</button>
-  <div id="code1488" class="collapse">
-```{r, eval = F}
-load("ReADI_C_2015_Imp.RData")
-
+:::: {style="margin:16px 0"}
+<button type="button" class="btn btn-dark" control-id="ControlID-54" data-bs-toggle="collapse" data-bs-target="#code1488">Show Code</button>
+::: {#code1488 .collapse}
+```{r}
 ReADI_C_2015 <- dplyr::mutate(ReADI_C_2015_Imp,
     MEDFI = B19013_001,
     INCDIS = log(100*((B19001_002 + B19001_003 + B19001_004 + 1)/(B19001_014 + B19001_015 + B19001_016 + B19001_017 + 1))),
@@ -1461,18 +1307,12 @@ ReADI_C_2015 <- dplyr::mutate(ReADI_C_2015_Imp,
     NOINT = (B25043_007 + B25043_016)/B25043_001*100,
     NOPLUM = log((B25049_007 + B25049_004 + 1)/(B25049_001 + 1)*100),
     CROWD = (B25014_005 + B25014_006 + B25014_007 + B25014_011 + B25014_012 + B25014_013)/B25014_001*100,
-    POPWT = B01003_001
+    POPWT = log(B01003_001)
 ) %>%
-  select(GEOID, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT, 
-) 
-hist(ReADI_C_2015$POPWT)
-ReADI_C_2015$POPWT <- log(ReADI_C_2015$POPWT)
-
+  select(GEOID, County, State, MEDFI, INCDIS, BELPL, PL150, EDU9YR, HSDPNHIGH, EMPWC, UNEMP, MEDHV, MEDRNT, MEDMORT, OWN, SNGPNT, NOVEH, NOINT, NOPLUM, CROWD, POPWT) 
 
 # Replacing NA values resulting from 0 values back to 0. 
 colSums(is.na(ReADI_C_2015))
-ReADI_2015_C_RawVars <- ReADI_C_2015
-save(ReADI_2015_C_RawVars, file = "ReADI_2015_C_RawVars.RData")
 
 ADI_short <- ReADI_C_2015[, c("GEOID", "MEDFI", "INCDIS", "BELPL", "PL150", "EDU9YR", "HSDPNHIGH", "EMPWC", "UNEMP", "MEDHV", "MEDRNT", "MEDMORT", "OWN", "SNGPNT", "NOVEH", "NOINT", "NOPLUM", "CROWD")]
 rownames(ADI_short) <- ADI_short$GEOID
@@ -1481,53 +1321,41 @@ ADI_short$GEOID <- NULL
 # zscore transform
 ADI_short <- as.data.frame(scale(ADI_short))
 
-# Checking NAs and Inf values
-NA_INF_C <- as.data.frame(t(sapply(1:ncol(ADI_short), function(x){
-  NAs <- sum(is.na(ADI_short[,x]))
-  Infs <- sum(is.infinite(ADI_short[,x]))
-  c(NAs, Infs)
-})))
-colnames(NA_INF_C) <- c("NA", "Infinite")
-rownames(NA_INF_C) <- colnames(ADI_short)
-
 # Factor analysis is performed with a one factor solution which will be the scores applied to standardized data.
-load("ReADI_2015_Wt.RData")
-identical(rownames(ADI_short), ReADI_C_2015$GEOID)
+stopifnot(identical(rownames(ADI_short), ReADI_C_2015$GEOID))
 adi.fa <- fa(ADI_short, nfactors = 1, fm = "pa", weight = ReADI_C_2015$POPWT)
+
+# Loadings
+identical(colnames(adi.fa$residual),ReADI_2015_Loadings$Vars)
+ReADI_2015_Loadings$C <- loadings(adi.fa)[,"PA1"]
+save(ReADI_2015_Loadings, file = "ReADI_2015_Loadings.RData")
+write.csv(ReADI_2015_Loadings, file = "ReADI_2015_Loadings.csv")
+
+# weights
 identical(colnames(adi.fa$residual),ReADI_2015_Wt$Vars)
 ReADI_2015_Wt$C <- adi.fa$weights[,"PA1"]
 save(ReADI_2015_Wt, file = "ReADI_2015_Wt.RData")
 write.csv(ReADI_2015_Wt, file = "ReADI_2015_Wt.csv")
 
-# Applying new weights coefficients to zscore data
-identical(rownames(ReADI_2015_Wt), colnames(ADI_short))
-ReADI_C_2015 <- as.data.frame(do.call(cbind,lapply(1:nrow(ReADI_2015_Wt), function(x){
-  ADI_short[,x]*ReADI_2015_Wt[x,"C"]
-})))
-colnames(ReADI_C_2015) <- colnames(ADI_short)
-rownames(ReADI_C_2015) <- rownames(ADI_short)
-
-# Summing the weighted measures per CBG
-ReADI_C_2015$ReADI_C_Raw <- rowSums(ReADI_C_2015, na.rm = F)
-sum(is.na(ReADI_C_2015$ReADI_C_Raw)) # 0
-ReADI_C_2015$GEOID <- rownames(ReADI_C_2015)
-
-# There is subsequent percentile ranking done for relative comparisons of CBG nationally.
-ReADI_C_2015$ReADI_C_NR <- round(percent_rank(ReADI_C_2015$ReADI_C_Raw)*100, 0)
-
-# Range of variables after weights applied
-Range_C <- as.data.frame(t(sapply(1:17, function(x){
-  Mid <- median(ReADI_C_2015[,x], na.rm = T)
-  Min <- range(ReADI_C_2015[,x], na.rm = T)[1]
-  Max <- range(ReADI_C_2015[,x], na.rm = T)[2]
-  Dif <- Max - Min
-  c(Mid, Min, Max, Dif)
-})))
-colnames(Range_C) <- c("Median", "Min", "Max", "Dif")
-rownames(Range_C) <- colnames(ReADI_C_2015)[1:17]
+# ReADI Scores
+ADI <- as.data.frame(adi.fa$scores)
+colnames(ADI) <- c("ReADI_C_Raw")
+stopifnot(identical(rownames(ADI), ReADI_C_2015$GEOID))
+ADI$ReADI_C_NR <- round(percent_rank(ADI$ReADI_C_Raw)*100, 0)
+ADI$GEOID <- rownames(ADI)
+ReADI_C_2015 <- plyr::join(ReADI_C_2015, ADI, by = "GEOID")
 save(ReADI_C_2015, file = "ReADI_C_2015.RData")
+write.csv(ReADI_C_2015, file = "ReADI_C_2015.csv")
 ```
-  </div>
-</div>
+:::
+::::
 
 <br><br>
+
+# Summary
+
+<br>
+
+At this stage, ReADI has been fully constructed for all three geographic levels. For each level, the workflow produces the calculated scoring coefficients, raw ReADI scores, nationally ranked (0–100) ReADI scores, and the corresponding factor loadings and weights. These outputs form the basis for all subsequent mapping, validation, and comparison analyses. Because all steps are explicitly documented and reproducible, users can subset geographic levels, modify components, or re-estimate the factor model for alternative datasets as needed.
+
+
