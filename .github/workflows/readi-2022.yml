@@ -1,4 +1,4 @@
-name: ReADI renv + render check
+name: ReADI 2022 + render check
 
 on:
   push:
