@@ -144,7 +144,7 @@ The Reproducible Area Deprivation Index (ReADI) is a fully documented re-impleme
 - Modernizes key variable definitions and thresholds (e.g., education and income disparity) to reflect current socioeconomic conditions.
 - Incorporates population size in the factor model to account for highly skewed area population distributions.
 
-For full methodological details, see the main ReADI methods documentation and website.
+For full methodological details, see the main ReADI methods documentation and [website](https://sepi.stanford.edu/available-socioeconomic-position-indices/reproducible-area-deprivation-index-readi).
 
 # ReADI Preparation
 ***
